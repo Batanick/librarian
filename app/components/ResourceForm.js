@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import Form from 'react-jsonschema-form';
 
-import 'bootswatch/dist/spacelab/bootstrap.min.css';
+import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
 
 type Props = {};
 
@@ -23,9 +23,9 @@ export default class ResourceForm extends Component<Props> {
 
   render() {
     return (
-      <div className="col-sm-3">
-        <div className="card 18-rem">
-          <div className="card-body">
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles['card-body']}>
             <Form
               schema={schema}
               onChange={log('changed')}
