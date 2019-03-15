@@ -23,7 +23,7 @@ export default class ResourceForm extends Component<Props> {
 
   render() {
     return (
-      <div className={styles.container}>
+      <div className={styles['col-4']}>
         <div className={styles.card}>
           <div className={styles['card-body']}>
             <Form
