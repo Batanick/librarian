@@ -25,6 +25,7 @@ export default class ResourceForm extends Component<Props> {
     return (
       <div className={styles['col-4']}>
         <div className={styles.card}>
+          <div className={styles['card-header']}>CardConfig</div>
           <div className={styles['card-body']}>
             <Form
               schema={schema}
