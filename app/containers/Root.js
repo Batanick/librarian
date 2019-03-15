@@ -4,13 +4,15 @@ import { Provider } from 'react-redux';
 import { ConnectedRouter } from 'connected-react-router';
 import type { Store } from '../reducers/types';
 import Routes from '../Routes';
+import {DragDropContext} from "react-dnd";
+import HTML5Backend from "react-dnd-html5-backend";
 
 type Props = {
   store: Store,
   history: {}
 };
 
-export default class Root extends Component<Props> {
+class Root extends Component<Props> {
   render() {
     const { store, history } = this.props;
     return (
@@ -22,3 +24,5 @@ export default class Root extends Component<Props> {
     );
   }
 }
+
+export default DragDropContext(HTML5Backend)(Root)
