@@ -1,5 +1,6 @@
 // @flow
 import React, { Component } from 'react';
+// noinspection ES6CheckImport
 import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
@@ -13,15 +14,14 @@ type Props = {
 const styles = {
   flex: 1,
   flexDirection: 'column',
-  position: 'relative'
+  position: 'relative',
+  minWidth: '1000px',
+  minHeight: '1000px'
 };
 
 function collect(connect, monitor) {
   return {
-    // Call this function inside render()
-    // to let React DnD handle the drag events:
     connectDropTarget: connect.dropTarget(),
-    // You can ask the monitor about the current drag state:
     isOver: monitor.isOver(),
     isOverCurrent: monitor.isOver({ shallow: true }),
     canDrop: monitor.canDrop(),
@@ -30,6 +30,7 @@ function collect(connect, monitor) {
   };
 }
 
+// noinspection JSUnusedGlobalSymbols
 const target = {
   drop(props, monitor, component) {
     const item = monitor.getItem();
@@ -71,12 +72,6 @@ class Workspace extends Component<Props> {
     const { elements } = this.state;
     return connectDropTarget(
       <div id="workspace" style={Object.assign({}, styles)}>
-        <h3>Workspace</h3>
-        <h3>Workspace</h3>
-        <h3>Workspace</h3>
-        <h3>Workspace</h3>
-        <h3>Workspace</h3>
-        <h3>Workspace</h3>
         {Object.keys(elements).map(key => {
           const { left, top } = elements[key];
           return (
