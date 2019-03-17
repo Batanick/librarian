@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
 import ResourceForm from './ResourceForm';
+import Dragable from './Dragable';
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -75,14 +76,16 @@ class Workspace extends Component<Props> {
         {Object.keys(elements).map(key => {
           const { left, top } = elements[key];
           return (
-            <ResourceForm
+            <Dragable
               key={key}
               id={key}
               left={left}
               top={top}
               connectDragSource=""
               isDragging="false"
-            />
+            >
+              <ResourceForm name={key} />
+            </Dragable>
           );
         })}
       </div>
