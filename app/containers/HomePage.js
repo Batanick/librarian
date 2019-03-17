@@ -8,6 +8,6 @@ export default class HomePage extends Component<Props> {
   props: Props;
 
   render() {
-    return <Workspace />;
+    return <Workspace pos={{left:0, top: 0}} />;
   }
 }

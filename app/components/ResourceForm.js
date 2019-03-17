@@ -4,14 +4,11 @@ import Form from 'react-jsonschema-form';
 
 import {DragSource} from "react-dnd";
 
-import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
-
 type Props = {
-  pos: {
-    left: 0,
-    top: 0
-  }
+  id: ""
 };
+
+import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
 
 const style = {
   position: 'absolute'
@@ -32,50 +29,62 @@ const log = type => console.log.bind(console, type);
 const formSource = {
   beginDrag(props) {
     // console.log(props)
-    return props.pos;
+    return {id: props.id};
   },
   endDrag(props, monitor, component) {
-    console.log("Result:" +  monitor.getDifferenceFromInitialOffset());
+    // console.log(monitor.getDifferenceFromInitialOffset());
     if (!component) {
       return
     }
 
-    // const item = monitor.getItem();
-    // const delta = monitor.getDifferenceFromInitialOffset();
+    const delta = monitor.getDifferenceFromInitialOffset();
     // const left = Math.round(item.left + delta.x);
     // const top = Math.round(item.top + delta.y);
-    // console.log(left + ":" + top);
     // component.moveBox(left, top)
   }
 };
 
 function collect(connect, monitor) {
-  console.log(monitor.getDifferenceFromInitialOffset());
+  // console.log(monitor.didDrop());
 
   return {
     connectDragSource: connect.dragSource(),
     connectDragPreview: connect.dragPreview(),
     isDragging: monitor.isDragging(),
-    getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
   }
 }
 
 class ResourceForm extends Component<Props> {
-  props: Props;
+
+  constructor(props) {
+    super(props);
+    this.state = {pos: {left: 42, top: 20}};
+  }
+
+  state: {
+    pos: {
+      left: 10,
+      top: 10
+    }
+  };
 
   render() {
     const {
-      pos,
       connectDragSource,
       isDragging
     } = this.props;
+
+    const left = this.state.pos.left;
+    const top = this.state.pos.top;
 
     if (isDragging) {
       return null
     }
 
+    console.log(this.state);
+
     return connectDragSource(
-      <div style={Object.assign({}, style)}>
+      <div style={Object.assign({}, style, {left, top})}>
         <div className={styles.card}>
           <div className={styles['card-header']}>CardConfig</div>
           <div className={styles['card-body']}>
@@ -92,15 +101,15 @@ class ResourceForm extends Component<Props> {
     )
   }
 
-  movePos(left, top) {
-    console.log("Drop:" + left);
-    this.setState({
-      pos: {
-        left: left,
-        top: top
-      }
-    });
-  }
+  // movePos(left, top) {
+  //   console.log("Drop:" + left);
+  //   this.setState({
+  //     pos: {
+  //       left: left,
+  //       top: top
+  //     }
+  //   });
+  // }
 }
 
 export default DragSource("resource", formSource, collect)(ResourceForm)

@@ -4,8 +4,12 @@ import React, {Component} from 'react';
 import ResourceForm from './ResourceForm';
 import {DropTarget} from 'react-dnd';
 
-type Props = {};
-
+type Props = {
+  pos: {
+    left: 0,
+    top: 0
+  }
+};
 const styles = {
   flex: 1,
   flexDirection: 'column',
@@ -29,22 +33,24 @@ function collect(connect, monitor) {
 const target = {
   drop(props, monitor, component) {
 
-    // const item = monitor.getItem();
-    // console.log(monitor.getItem());
-    // const delta = monitor.getDifferenceFromInitialOffset();
-    // const left = Math.round(item.left + delta.x);
-    // const top = Math.round(item.top + delta.y);
-    // component.movePos(left, top);
-  },
+    const item = monitor.getItem();
+    const delta = monitor.getDifferenceFromInitialOffset();
+    const left = Math.round(item.left + delta.x);
+    const top = Math.round(item.top + delta.y);
+
+    component.moveChild(item.id, delta.x, delta.y)
+  }
+
 };
 
 class Workspace extends Component<Props> {
   props: Props;
 
   render() {
-    const {hideSourceOnDrag, connectDropTarget} = this.props
+    const {connectDropTarget} = this.props;
 
     return connectDropTarget((
+
       <div id="workspace" style={Object.assign({}, styles)}>
         <h3>Workspace</h3>
         <h3>Workspace</h3>
@@ -52,9 +58,13 @@ class Workspace extends Component<Props> {
         <h3>Workspace</h3>
         <h3>Workspace</h3>
         <h3>Workspace</h3>
-        <ResourceForm val="42" pos={{left: 10, top: 20}}/>
+        <ResourceForm id={"RandomResourceId"}/>
       </div>
     ));
+  }
+
+  moveChild(id, left, top) {
+    console.log({id: id, left: left, top: top});
   }
 }
 
