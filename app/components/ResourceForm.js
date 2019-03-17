@@ -10,7 +10,6 @@ type Props = {
 };
 
 const schema = {
-  title: 'Todo',
   type: 'object',
   required: ['title'],
   properties: {
