@@ -6,18 +6,9 @@ import Workspace from '../components/Workspace';
 
 type Props = {};
 
-const styles = {
-  overflowY: 'scroll',
-  overflowX: 'scroll'
-};
-
 class Root extends Component<Props> {
   render() {
-    return (
-      <div style={Object.assign({}, styles)}>
-        <Workspace connectDropTarget={{}} />
-      </div>
-    );
+    return <Workspace connectDropTarget={{}} />;
   }
 }
 

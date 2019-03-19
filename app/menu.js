@@ -214,14 +214,14 @@ export default class MenuBuilder {
             label: '&Zoom in',
             accelerator: 'Ctrl+Shift+Plus',
             click: () => {
-              this.mainWindow.webContents.send(Event.ZOOM_IN);
+              this.mainWindow.webContents.send(Event.ZOOM_CHANGE, 0.1);
             }
           },
           {
             label: '&Zoom out',
             accelerator: 'Ctrl+Shift+-',
             click: () => {
-              this.mainWindow.webContents.send(Event.ZOOM_OUT);
+              this.mainWindow.webContents.send(Event.ZOOM_CHANGE, -0.1);
             }
           },
           {
