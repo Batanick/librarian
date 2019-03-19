@@ -30,7 +30,7 @@ export default class ResourceForm extends Component<Props> {
         <div className={styles['card-body']}>
           <Form
             schema={schema}
-            onChange={log('changed')}
+            // onChange={log('changed')}
             onSubmit={log('submitted')}
             onError={log('errors')}
           />

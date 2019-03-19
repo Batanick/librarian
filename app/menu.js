@@ -1,5 +1,7 @@
 // @flow
-import { app, Menu, shell, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu, shell } from 'electron';
+
+import * as Event from './constants/events';
 
 export default class MenuBuilder {
   mainWindow: BrowserWindow;
@@ -200,44 +202,43 @@ export default class MenuBuilder {
       },
       {
         label: '&View',
-        submenu:
-          process.env.NODE_ENV === 'development'
-            ? [
-                {
-                  label: '&Reload',
-                  accelerator: 'Ctrl+R',
-                  click: () => {
-                    this.mainWindow.webContents.reload();
-                  }
-                },
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  }
-                },
-                {
-                  label: 'Toggle &Developer Tools',
-                  accelerator: 'Alt+Ctrl+I',
-                  click: () => {
-                    this.mainWindow.toggleDevTools();
-                  }
-                }
-              ]
-            : [
-                {
-                  label: 'Toggle &Full Screen',
-                  accelerator: 'F11',
-                  click: () => {
-                    this.mainWindow.setFullScreen(
-                      !this.mainWindow.isFullScreen()
-                    );
-                  }
-                }
-              ]
+        submenu: [
+          {
+            label: '&Reload',
+            accelerator: 'Ctrl+R',
+            click: () => {
+              this.mainWindow.webContents.reload();
+            }
+          },
+          {
+            label: '&Zoom in',
+            accelerator: 'Ctrl+Shift+Plus',
+            click: () => {
+              this.mainWindow.webContents.send(Event.ZOOM_IN);
+            }
+          },
+          {
+            label: '&Zoom out',
+            accelerator: 'Ctrl+Shift+-',
+            click: () => {
+              this.mainWindow.webContents.send(Event.ZOOM_OUT);
+            }
+          },
+          {
+            label: 'Toggle &Full Screen',
+            accelerator: 'F11',
+            click: () => {
+              this.mainWindow.setFullScreen(!this.mainWindow.isFullScreen());
+            }
+          },
+          {
+            label: 'Toggle &Developer Tools',
+            accelerator: 'Alt+Ctrl+I',
+            click: () => {
+              this.mainWindow.toggleDevTools();
+            }
+          }
+        ]
       },
       {
         label: 'Help',
