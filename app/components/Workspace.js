@@ -41,8 +41,9 @@ const target = {
   drop(props, monitor, component) {
     const item = monitor.getItem();
     const delta = monitor.getDifferenceFromInitialOffset();
-    const left = Math.round(item.left + delta.x);
-    const top = Math.round(item.top + delta.y);
+    const { zoom } = component.state;
+    const left = Math.round(item.left + delta.x / zoom);
+    const top = Math.round(item.top + delta.y / zoom);
 
     component.moveChild(item.id, left, top);
   }
