@@ -1,4 +1,5 @@
 {
+  "$id" : "SimpleSchema",
   "title": "A registration form",
   "description": "A simple form example.",
   "type": "object",

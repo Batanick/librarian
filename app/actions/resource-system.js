@@ -3,6 +3,8 @@ import log from 'electron-log';
 const schemaExt = ".schema.json";
 const resExt = ".rs";
 
+const idField = "$id";
+
 const fs = require('fs');
 
 export default class ResourceSystem {
@@ -10,6 +12,9 @@ export default class ResourceSystem {
   res: null;
 
   loadFolder(path) {
+    this.schemas = {};
+    this.res = {};
+
     log.info("Loading resource folder: " + path);
 
     this.loadSchemas(path + "\\types");
@@ -17,19 +22,41 @@ export default class ResourceSystem {
 
   loadSchemas(schemaPath) {
     log.info("Loading schemas from: " + schemaPath);
-    fs.readdir(schemaPath, (err, dir) => {
-      for (let filePath of dir)
-        if (filePath.endsWith(".js")) {
-          this.loadSchema(schemaPath + "\\" + filePath)
-        }
+    log.info("Loading schemas from: " + typeof (schemaPath));
 
+    fs.readdir(schemaPath, (err, dir) => {
+      let counter = 0;
+
+      for (let filePath of dir) {
+        if (filePath.endsWith(schemaExt)) {
+          log.info("Loading template:" + schemaPath);
+
+          const result = this.loadSchema(schemaPath + "\\" + filePath);
+
+          log.info(result ? "Success" : "Fail!");
+          counter++;
+        }
+      }
+
+      log.info("Loaded " + counter + " schemas");
     });
   }
 
   loadSchema(path) {
-    log.info("Loading template:" + path);
     const content = fs.readFileSync(path);
     const jsonContent = JSON.parse(content);
     log.debug(jsonContent);
+
+    const id = jsonContent[idField];
+    if (!id) {
+      log.error("Template:" + path + " don't specify resource template id");
+      return false;
+    }
+    if (this.schemas[id]) {
+      log.error("Duplicate schema with id: " + id);
+      return false;
+    }
+
+    return true;
   }
 }

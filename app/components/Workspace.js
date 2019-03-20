@@ -9,6 +9,11 @@ import update from 'immutability-helper';
 import ResourceForm from './ResourceForm';
 import Dragable from './Dragable';
 
+import * as Events from '../constants/events';
+
+const log = require('electron-log');
+const { ipcRenderer } = window.require('electron');
+
 type Props = {
   connectDropTarget: PropTypes.object
 };
@@ -63,6 +68,27 @@ class Workspace extends Component<Props> {
     };
   }
 
+  componentDidMount() {
+    const selfThis = this;
+    ipcRenderer.on(Events.UPDATE_SCHEMAS, (event, arg) => {
+      selfThis.reset(arg)
+    });
+  }
+
+  componentWillUnmount() {
+    ipcRenderer.removeAllListeners(Events.UPDATE_SCHEMAS);
+  }
+
+  reset(schemas) {
+    this.setState(prevState =>
+      update(prevState, {
+        schemas: schemas
+      })
+    );
+
+
+  }
+
   moveChild(id, left, top) {
     this.setState(prevState =>
       update(prevState, {
@@ -73,6 +99,8 @@ class Workspace extends Component<Props> {
         }
       })
     );
+
+    log(this.state);
   }
 
   render() {

@@ -1,4 +1,5 @@
 {
+  "$id" : "ArrayExample",
   "definitions": {
     "Thing": {
       "type": "object",

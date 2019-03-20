@@ -15,7 +15,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 
 import MenuBuilder from './menu';
-import ResourceSystem from './actions/resource-system';
+import ResourceClient from './actions/resource-client';
 
 export default class AppUpdater {
   constructor() {
@@ -26,7 +26,7 @@ export default class AppUpdater {
 }
 
 let mainWindow = null;
-let resourceSystem = null;
+let resourceClient = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -70,12 +70,12 @@ app.on('ready', async () => {
     await installExtensions();
   }
 
-  resourceSystem = new ResourceSystem();
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
     height: 728
   });
+  resourceClient = new ResourceClient(mainWindow);
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
@@ -95,10 +95,10 @@ app.on('ready', async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
-    resourceSystem = null;
+    resourceClient = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow, resourceSystem);
+  const menuBuilder = new MenuBuilder(mainWindow, resourceClient);
   menuBuilder.buildMenu();
 
   // Remove this if your app does not use auto updates

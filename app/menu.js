@@ -2,18 +2,16 @@
 import {app, BrowserWindow, Menu, shell} from 'electron';
 
 import * as Event from './constants/events';
-import ResourceSystem from './actions/resource-system';
 
-const {dialog} = require('electron');
+import ResourceClient from './actions/resource-client';
 
 export default class MenuBuilder {
   mainWindow: BrowserWindow;
+  client: ResourceClient;
 
-  resourceSystem: ResourceSystem;
-
-  constructor(mainWindow: BrowserWindow, resourceSystem: ResourceSystem) {
+  constructor(mainWindow: BrowserWindow, client: ResourceClient) {
     this.mainWindow = mainWindow;
-    this.resourceSystem = resourceSystem;
+    this.client = client;
   }
 
   buildMenu() {
@@ -189,7 +187,7 @@ export default class MenuBuilder {
   }
 
   buildDefaultTemplate() {
-    const templateDefault = [
+    return [
       {
         label: '&File',
         submenu: [
@@ -197,8 +195,7 @@ export default class MenuBuilder {
             label: '&Load folder...',
             accelerator: 'Ctrl+Shift+O',
             click: () => {
-              const path = dialog.showOpenDialog({properties: ['openFile', 'openDirectory']});
-              this.resourceSystem.loadFolder(path);
+              this.client.switchFolder();
             }
           },
           {
@@ -300,7 +297,5 @@ export default class MenuBuilder {
         ]
       }
     ];
-
-    return templateDefault;
   }
 }
