@@ -13,7 +13,9 @@
 import { app, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+
 import MenuBuilder from './menu';
+import ResourceSystem from './actions/resource-system';
 
 export default class AppUpdater {
   constructor() {
@@ -24,6 +26,7 @@ export default class AppUpdater {
 }
 
 let mainWindow = null;
+let resourceSystem = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -67,6 +70,7 @@ app.on('ready', async () => {
     await installExtensions();
   }
 
+  resourceSystem = new ResourceSystem();
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
@@ -91,9 +95,10 @@ app.on('ready', async () => {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    resourceSystem = null;
   });
 
-  const menuBuilder = new MenuBuilder(mainWindow);
+  const menuBuilder = new MenuBuilder(mainWindow, resourceSystem);
   menuBuilder.buildMenu();
 
   // Remove this if your app does not use auto updates
