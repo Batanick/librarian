@@ -30,6 +30,6 @@ export default class ResourceClient {
   }
 
   addingResource() {
-    log.info("Creating resource");
+    log.info("Adding resource");
   }
 }
