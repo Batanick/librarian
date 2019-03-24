@@ -18,28 +18,28 @@ export default class ResourceSystem {
     log.info("Loading resource folder: " + path);
 
     this.loadSchemas(path + "\\types");
+
   }
 
   loadSchemas(schemaPath) {
     log.info("Loading schemas from: " + schemaPath);
-    log.info("Loading schemas from: " + typeof (schemaPath));
 
-    fs.readdir(schemaPath, (err, dir) => {
-      let counter = 0;
+    const dir = fs.readdirSync(schemaPath)
 
-      for (let filePath of dir) {
-        if (filePath.endsWith(schemaExt)) {
-          log.info("Loading template:" + schemaPath);
+    let counter = 0;
 
-          const result = this.loadSchema(schemaPath + "\\" + filePath);
+    for (let filePath of dir) {
+      if (filePath.endsWith(schemaExt)) {
+        log.info("Loading template: " + filePath);
 
-          log.info(result ? "Success" : "Fail!");
-          counter++;
-        }
+        const result = this.loadSchema(schemaPath + "\\" + filePath);
+        log.info(result ? "Success" : "Fail!");
+
+        counter++;
       }
+    }
 
-      log.info("Loaded " + counter + " schemas");
-    });
+    log.info("Loaded " + counter + " schemas");
   }
 
   loadSchema(path) {
@@ -57,6 +57,7 @@ export default class ResourceSystem {
       return false;
     }
 
+    this.schemas[id] = jsonContent;
     return true;
   }
 }

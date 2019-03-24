@@ -82,11 +82,12 @@ class Workspace extends Component<Props> {
   reset(schemas) {
     this.setState(prevState =>
       update(prevState, {
-        schemas: schemas
+        schemas: schemas,
+        elements: {}
       })
     );
 
-
+    log.debug(schemas);
   }
 
   moveChild(id, left, top) {
@@ -99,8 +100,6 @@ class Workspace extends Component<Props> {
         }
       })
     );
-
-    log(this.state);
   }
 
   render() {
