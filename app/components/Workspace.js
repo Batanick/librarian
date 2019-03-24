@@ -62,9 +62,10 @@ class Workspace extends Component<Props> {
     super(args);
     this.state = {
       elements: {
-        ResourceId: { top: 20, left: 80, title: 'Drag me around' },
-        ResourceId2: { top: 40, left: 40, title: 'Drag me around' }
-      }
+        // ResourceId: { top: 20, left: 80, title: 'Drag me around' },
+        // ResourceId2: { top: 40, left: 40, title: 'Drag me around' }
+      },
+      schemas : {}
     };
   }
 
@@ -80,14 +81,11 @@ class Workspace extends Component<Props> {
   }
 
   reset(schemas) {
-    this.setState(prevState =>
-      update(prevState, {
+    this.setState({
         schemas: schemas,
         elements: {}
-      })
+      }
     );
-
-    log.debug(schemas);
   }
 
   moveChild(id, left, top) {

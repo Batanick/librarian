@@ -24,7 +24,7 @@ export default class ResourceSystem {
   loadSchemas(schemaPath) {
     log.info("Loading schemas from: " + schemaPath);
 
-    const dir = fs.readdirSync(schemaPath)
+    const dir = fs.readdirSync(schemaPath);
 
     let counter = 0;
 
@@ -45,9 +45,8 @@ export default class ResourceSystem {
   loadSchema(path) {
     const content = fs.readFileSync(path);
     const jsonContent = JSON.parse(content);
-    log.debug(jsonContent);
-
     const id = jsonContent[idField];
+
     if (!id) {
       log.error("Template:" + path + " don't specify resource template id");
       return false;
