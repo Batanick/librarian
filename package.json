@@ -256,6 +256,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.5.0",
+    "bootstrap": "^4.3.1",
     "bootswatch": "^4.3.1",
     "devtron": "^1.4.0",
     "electron-debug": "^2.0.0",
@@ -263,10 +264,12 @@
     "electron-updater": "^3.2.3",
     "history": "^4.7.2",
     "immutability-helper": "^3.0.0",
-    "react": "^16.6.3",
+    "prop-types": "latest",
+    "react": "16.8.0",
+    "react-bootstrap": "^1.0.0-beta.6",
     "react-dnd": "^7.3.2",
     "react-dnd-html5-backend": "^7.2.0",
-    "react-dom": "^16.6.3",
+    "react-dom": "16.8.0",
     "react-hot-loader": "^4.3.12",
     "react-jsonschema-form": "^1.3.0",
     "react-redux": "^5.1.1",
@@ -274,8 +277,7 @@
     "react-router-dom": "^4.3.1",
     "redux": "^4.0.1",
     "redux-thunk": "^2.3.0",
-    "source-map-support": "^0.5.9",
-    "prop-types": "latest"
+    "source-map-support": "^0.5.9"
   },
   "devEngines": {
     "node": ">=7.x",

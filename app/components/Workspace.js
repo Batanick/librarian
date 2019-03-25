@@ -1,18 +1,17 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
 import ResourceForm from './ResourceForm';
+
 import Dragable from './Dragable';
 
-import * as Events from '../constants/events';
-
 const log = require('electron-log');
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -36,7 +35,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
+    isOverCurrent: monitor.isOver({shallow: true}),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -62,23 +61,13 @@ class Workspace extends Component<Props> {
     super(args);
     this.state = {
       elements: {
-        // ResourceId: { top: 20, left: 80, title: 'Drag me around' },
-        // ResourceId2: { top: 40, left: 40, title: 'Drag me around' }
+         ResourceId: { top: 20, left: 80, title: 'Drag me around' },
+         ResourceId2: {top: 40, left: 40, title: 'Drag me around'}
       },
-      schemas : {}
+      schemas: {}
     };
   }
 
-  componentDidMount() {
-    const selfThis = this;
-    ipcRenderer.on(Events.UPDATE_SCHEMAS, (event, arg) => {
-      selfThis.reset(arg)
-    });
-  }
-
-  componentWillUnmount() {
-    ipcRenderer.removeAllListeners(Events.UPDATE_SCHEMAS);
-  }
 
   reset(schemas) {
     this.setState({
@@ -93,7 +82,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         elements: {
           [id]: {
-            $merge: { left, top }
+            $merge: {left, top}
           }
         }
       })

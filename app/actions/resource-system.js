@@ -18,7 +18,6 @@ export default class ResourceSystem {
     log.info("Loading resource folder: " + path);
 
     this.loadSchemas(path + "\\types");
-
   }
 
   loadSchemas(schemaPath) {
