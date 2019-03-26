@@ -5,7 +5,6 @@ import Root from './containers/Root';
 import './app.global.css';
 
 import './js/zoom'
-import './js/file-handling'
 
 render(
   <AppContainer>

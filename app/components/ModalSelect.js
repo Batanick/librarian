@@ -1,44 +1,57 @@
 // @flow
 import React, {Component} from 'react';
 import Modal from 'react-bootstrap/Modal'
-import Button from "react-bootstrap/Button";
+import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
 
 import PropTypes from "prop-types";
 
+const log = require('electron-log');
+
 type Props = {
-  options : PropTypes.array;
-  show : PropTypes.bool;
+  options: PropTypes.array,
+  show: PropTypes.bool,
+  title: PropTypes.string,
+  okButtonLabel: PropTypes.string,
+  onSelect: PropTypes.func,
+  onClose: PropTypes.func
 };
 
 export default class ModalSelect extends Component<Props> {
   props: Props;
+  inputRef: null;
 
   constructor(...args) {
     super(args);
+    this.inputRef = React.createRef();
   }
 
-  handleClose() {
-  }
+  handleSubmit = () => {
+    this.props.onSelect(this.inputRef.current.value);
+  };
 
-  handleShow() {
-  }
+  handleClose = () => {
+    this.props.onClose();
+  };
 
   render() {
     const show = this.props.show;
-    const options = this.props.options;
 
     return (
       <Modal show={show} onHide={this.handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          <Modal.Title>{this.props.title}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Woohoo, you're reading this text in a modal!</Modal.Body>
+        <Modal.Body>
+          <Form.Control ref={this.inputRef} as="select">
+            {this.props.options.map(entry => {
+              return (<option key={entry} value={entry}>{entry}</option>)
+            })}
+          </Form.Control>
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={this.handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={this.handleClose}>
-            Save Changes
+          <Button variant="success" onClick={this.handleSubmit}>
+            {this.props.okButtonLabel}
           </Button>
         </Modal.Footer>
       </Modal>

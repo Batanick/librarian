@@ -205,8 +205,7 @@ export default class MenuBuilder {
             label: '&New...',
             accelerator: 'Ctrl+N',
             click: () => {
-
-              console.log("New resource");
+              this.client.createResource();
             }
           },
           {

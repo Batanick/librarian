@@ -61,19 +61,21 @@ class Workspace extends Component<Props> {
     super(args);
     this.state = {
       elements: {
-         ResourceId: { top: 20, left: 80, title: 'Drag me around' },
-         ResourceId2: {top: 40, left: 40, title: 'Drag me around'}
-      },
-      schemas: {}
+        ResourceId: {top: 20, left: 80, title: 'Drag me around'},
+        ResourceId2: {top: 40, left: 40, title: 'Drag me around'}
+      }
     };
   }
 
+  addNewResource(schema, resourceId) {
+    const obj = {top: 20, left: 80, title: 'Drag me around'};
 
-  reset(schemas) {
-    this.setState({
-        schemas: schemas,
-        elements: {}
-      }
+    this.setState(prevState =>
+      update(prevState, {
+        elements: {
+          resourceId: obj
+        }
+      })
     );
   }
 
@@ -87,16 +89,17 @@ class Workspace extends Component<Props> {
         }
       })
     );
+    log.silly(this.state);
   }
 
   render() {
-    const { connectDropTarget } = this.props;
-    const { elements } = this.state;
+    const {connectDropTarget} = this.props;
+    const {elements} = this.state;
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
           {Object.keys(elements).map(key => {
-            const { left, top } = elements[key];
+            const {left, top} = elements[key];
             return (
               <Dragable
                 key={key}
@@ -106,7 +109,7 @@ class Workspace extends Component<Props> {
                 connectDragSource=""
                 isDragging="false"
               >
-                <ResourceForm name={key} />
+                <ResourceForm name={key}/>
               </Dragable>
             );
           })}

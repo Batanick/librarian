@@ -58,4 +58,8 @@ export default class ResourceSystem {
     this.schemas[id] = jsonContent;
     return true;
   }
+
+  addNewResource(path, resId) {
+    log.error("Adding new resource " + path + "(" + resId + ") , not implemented");
+  }
 }
