@@ -1,5 +1,7 @@
 import { BrowserWindow } from 'electron';
 
+import log from 'electron-log';
+
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
 
@@ -44,6 +46,14 @@ export default class ResourceClient {
   }
 
   createResourceOfType(type) {
+    log.info(`Creating new resource of type: ${type}`);
+
+    const schema = this.resourceSystem.schemas[type];
+    if (!schema) {
+      log.error(`Unknown schema: ${type}`);
+      return;
+    }
+
     const path = dialog.showSaveDialog({
       defaultPath: this.resourceSystem.path,
       filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
@@ -52,6 +62,16 @@ export default class ResourceClient {
       return;
     }
 
-    this.resourceSystem.createResource(type, path);
+    const created = this.resourceSystem.createResource(type, path);
+    if (!created) {
+      return;
+    }
+
+    log.silly(`New resource created: ${JSON.stringify(created)}`);
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_LOAD_RESOURCE,
+      schema,
+      created
+    );
   }
 }

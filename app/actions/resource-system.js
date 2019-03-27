@@ -10,13 +10,13 @@ const { dialog } = require('electron');
 export default class ResourceSystem {
   schemas: null;
 
-  res: null;
+  resources: null;
 
   path: null;
 
   loadFolder(path) {
     this.schemas = {};
-    this.res = {};
+    this.resources = {};
 
     log.info(`Loading resource folder: ${path}`);
 
@@ -67,7 +67,8 @@ export default class ResourceSystem {
 
   createResource(type, path) {
     const res = {};
-    res[Consts.FIELD_NAME_ID] = Math.floor(Math.random() * 1000000); // TODO: have proper solution here
+    const resId = Math.floor(Math.random() * 1000000); // TODO: have proper solution here
+    res[Consts.FIELD_NAME_ID] = resId;
     res[Consts.FIELD_NAME_TYPE] = type;
 
     const content = JSON.stringify(res, null, 4);
@@ -75,7 +76,10 @@ export default class ResourceSystem {
       fs.writeFileSync(path, content, 'utf-8');
     } catch (e) {
       dialog.showErrorBox('Something went wrong', e);
-      return this;
+      return null;
     }
+
+    this.resources[resId] = res;
+    return res;
   }
 }

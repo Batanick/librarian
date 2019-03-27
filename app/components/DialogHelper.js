@@ -1,11 +1,12 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 import ModalSelect from './ModalSelect';
-import * as Events from '../constants/events'
+import * as Events from '../constants/events';
 
 const log = require('electron-log');
-const {ipcRenderer} = window.require('electron');
+
+const { ipcRenderer } = window.require('electron');
 
 type Props = {};
 
@@ -26,7 +27,7 @@ export default class DialogHelper extends Component<Props> {
   componentDidMount() {
     const selfThis = this;
     ipcRenderer.on(Events.DIALOG_SELECT_SCHEMA_TYPE, (event, arg) => {
-      selfThis.showSchemaTypeSelection(arg)
+      selfThis.showSchemaTypeSelection(arg);
     });
   }
 
@@ -36,15 +37,13 @@ export default class DialogHelper extends Component<Props> {
 
   onTypeSelectCancelled() {
     this.setState({
-        createDialogSchemas: [],
-        createDialogShow: false
-      }
-    );
-    log.silly("Canceling creation");
+      createDialogSchemas: [],
+      createDialogShow: false
+    });
   }
 
   onTypeSelect(type) {
-    log.silly("Selected:" + type);
+    log.silly(`Selected:${type}`);
     this.onTypeSelectCancelled();
 
     if (type) {
@@ -55,29 +54,25 @@ export default class DialogHelper extends Component<Props> {
   showSchemaTypeSelection(schemas) {
     log.silly(schemas);
     this.setState({
-        createDialogSchemas: schemas,
-        createDialogShow: true
-      }
-    );
+      createDialogSchemas: schemas,
+      createDialogShow: true
+    });
   }
 
   render() {
-    const schemaTypes = this.state.createDialogSchemas;
-    const showCreateDialog = this.state.createDialogShow;
+    const { createDialogSchemas, createDialogShow } = this.state;
 
     return (
       <div>
         <ModalSelect
-          show={showCreateDialog}
-          options={schemaTypes}
+          show={createDialogShow}
+          options={createDialogSchemas}
           okButtonLabel="Select"
           onSelect={this.onTypeSelect}
           onClose={this.onTypeSelectCancelled}
-          title={"Select resource type"}
+          title="Select resource type"
         />
       </div>
     );
   }
-
-
 }
