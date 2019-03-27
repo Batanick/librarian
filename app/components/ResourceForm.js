@@ -6,23 +6,15 @@ import PropTypes from 'prop-types';
 import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
 
 type Props = {
-  name: PropTypes.string
-};
-
-const schema = {
-  type: 'object',
-  required: ['title'],
-  properties: {
-    title: { type: 'string', title: 'Title', default: 'A new task' },
-    done: { type: 'boolean', title: 'Done?', default: false }
-  }
+  name: PropTypes.string,
+  schema: PropTypes.obj
 };
 
 const log = type => console.log.bind(console, type);
 
 export default class ResourceForm extends Component<Props> {
   render() {
-    const { name } = this.props;
+    const { name, schema } = this.props;
 
     return (
       <div className={styles.card}>

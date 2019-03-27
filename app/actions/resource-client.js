@@ -32,7 +32,15 @@ export default class ResourceClient {
     }
     this.resourceSystem.loadFolder(path[0]);
     this.mainWindow.webContents.send(
-      Events.UPDATE_SCHEMAS,
+      Events.WORKSPACE_UPDATE_SCHEMAS,
+      this.resourceSystem.schemas
+    );
+  }
+
+  loadDefaultFolder() {
+    this.resourceSystem.loadFolder('./res');
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_UPDATE_SCHEMAS,
       this.resourceSystem.schemas
     );
   }
@@ -68,10 +76,6 @@ export default class ResourceClient {
     }
 
     log.silly(`New resource created: ${JSON.stringify(created)}`);
-    this.mainWindow.webContents.send(
-      Events.WORKSPACE_LOAD_RESOURCE,
-      schema,
-      created
-    );
+    this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, created);
   }
 }

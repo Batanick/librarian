@@ -98,6 +98,15 @@ app.on('ready', async () => {
     resourceClient = null;
   });
 
+  mainWindow.once('ready-to-show', () => {
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+    ) {
+      resourceClient.loadDefaultFolder();
+    }
+  });
+
   const menuBuilder = new MenuBuilder(mainWindow, resourceClient);
   menuBuilder.buildMenu();
 

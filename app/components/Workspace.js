@@ -9,7 +9,9 @@ import update from 'immutability-helper';
 import ResourceForm from './ResourceForm';
 
 import Dragable from './Dragable';
+
 import * as Events from '../constants/events';
+import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
@@ -44,6 +46,15 @@ function collect(connect, monitor) {
   };
 }
 
+const defaultSchema = {
+  type: 'object',
+  required: ['title'],
+  properties: {
+    title: { type: 'string', title: 'Title', default: 'A new task' },
+    done: { type: 'boolean', title: 'Done?', default: false }
+  }
+};
+
 // noinspection JSUnusedGlobalSymbols
 const target = {
   drop(props, monitor, component) {
@@ -62,35 +73,61 @@ class Workspace extends Component<Props> {
   constructor(...args) {
     super(args);
     this.state = {
-      elements: {
-        ResourceId: { top: 20, left: 80, title: 'Drag me around' },
-        ResourceId2: { top: 40, left: 40, title: 'Drag me around' }
-      }
+      resources: {
+        ResourceId: { top: 20, left: 80, title: 'Drag me around', value: {} },
+        ResourceId2: { top: 40, left: 40, title: 'Drag me around', value: {} }
+      },
+      schemas: null
     };
   }
 
   componentDidMount() {
     const selfThis = this;
-    ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, schema, res) => {
-      selfThis.addNewResource(schema, res);
+    ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res) => {
+      selfThis.addNewResource(res);
+    });
+    ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
+      selfThis.resetWorkspace(schemas);
     });
   }
 
   componentWillUnmount() {
     ipcRenderer.removeAllListeners(Events.WORKSPACE_LOAD_RESOURCE);
+    ipcRenderer.removeAllListeners(Events.WORKSPACE_UPDATE_SCHEMAS);
   }
 
-  addNewResource(schema, res) {
-    log.silly(
-      `Adding to workspace:${JSON.stringify(schema)}:${JSON.stringify(res)}`
+  resetWorkspace(schemas) {
+    log.info(`Loading schemas: ${Object.keys(schemas)}`);
+
+    this.setState({
+      resources: {},
+      schemas
+    });
+  }
+
+  addNewResource(res) {
+    const resId = res[Consts.FIELD_NAME_ID];
+    const type = res[Consts.FIELD_NAME_TYPE];
+    log.info(`Loading resource [${resId}] of type ${type}`);
+
+    const entry = {
+      top: 20,
+      left: 20,
+      title: resId,
+      content: res
+    };
+
+    this.setState(prevState =>
+      update(prevState, {
+        resources: { [resId.toString()]: { $set: entry } }
+      })
     );
-    return this;
   }
 
   moveChild(id, left, top) {
     this.setState(prevState =>
       update(prevState, {
-        elements: {
+        resources: {
           [id]: {
             $merge: { left, top }
           }
@@ -102,12 +139,13 @@ class Workspace extends Component<Props> {
 
   render() {
     const { connectDropTarget } = this.props;
-    const { elements } = this.state;
+    const { resources } = this.state;
+
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
-          {Object.keys(elements).map(key => {
-            const { left, top } = elements[key];
+          {Object.keys(resources).map(key => {
+            const { left, top } = resources[key];
             return (
               <Dragable
                 key={key}
@@ -117,7 +155,7 @@ class Workspace extends Component<Props> {
                 connectDragSource=""
                 isDragging="false"
               >
-                <ResourceForm name={key} />
+                <ResourceForm name={key} schema={defaultSchema} />
               </Dragable>
             );
           })}
