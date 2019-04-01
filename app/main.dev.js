@@ -10,12 +10,13 @@
  *
  * @flow
  */
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 
 import MenuBuilder from './menu';
 import ResourceClient from './actions/resource-client';
+import * as Consts from './constants/events';
 
 export default class AppUpdater {
   constructor() {
@@ -62,6 +63,16 @@ app.on('window-all-closed', () => {
   }
 });
 
+ipcMain.once(Consts.WORKSPACE_READY, () => {
+  log.silly('Workspace ready signal received');
+  if (
+    process.env.NODE_ENV === 'development' ||
+    process.env.DEBUG_PROD === 'true'
+  ) {
+    resourceClient.loadDefaultFolder();
+  }
+});
+
 app.on('ready', async () => {
   if (
     process.env.NODE_ENV === 'development' ||
@@ -96,15 +107,6 @@ app.on('ready', async () => {
   mainWindow.on('closed', () => {
     mainWindow = null;
     resourceClient = null;
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    if (
-      process.env.NODE_ENV === 'development' ||
-      process.env.DEBUG_PROD === 'true'
-    ) {
-      resourceClient.loadDefaultFolder();
-    }
   });
 
   const menuBuilder = new MenuBuilder(mainWindow, resourceClient);

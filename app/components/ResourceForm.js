@@ -7,25 +7,20 @@ import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
 
 type Props = {
   name: PropTypes.string,
-  schema: PropTypes.obj
+  schema: PropTypes.obj,
+  data: PropTypes.obj,
+  onChange: PropTypes.func
 };
-
-const log = type => console.log.bind(console, type);
 
 export default class ResourceForm extends Component<Props> {
   render() {
-    const { name, schema } = this.props;
+    const { name, schema, onChange, data } = this.props;
 
     return (
       <div className={styles.card}>
         <div className={styles['card-header']}>{name}</div>
         <div className={styles['card-body']}>
-          <Form
-            schema={schema}
-            // onChange={log('changed')}
-            onSubmit={log('submitted')}
-            onError={log('errors')}
-          />
+          <Form schema={schema} onChange={onChange} formData={data} />
         </div>
       </div>
     );

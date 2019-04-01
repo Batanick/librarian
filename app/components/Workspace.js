@@ -46,15 +46,6 @@ function collect(connect, monitor) {
   };
 }
 
-const defaultSchema = {
-  type: 'object',
-  required: ['title'],
-  properties: {
-    title: { type: 'string', title: 'Title', default: 'A new task' },
-    done: { type: 'boolean', title: 'Done?', default: false }
-  }
-};
-
 // noinspection JSUnusedGlobalSymbols
 const target = {
   drop(props, monitor, component) {
@@ -73,10 +64,7 @@ class Workspace extends Component<Props> {
   constructor(...args) {
     super(args);
     this.state = {
-      resources: {
-        ResourceId: { top: 20, left: 80, title: 'Drag me around', value: {} },
-        ResourceId2: { top: 40, left: 40, title: 'Drag me around', value: {} }
-      },
+      resources: {},
       schemas: null
     };
   }
@@ -89,6 +77,7 @@ class Workspace extends Component<Props> {
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
     });
+    ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
   componentWillUnmount() {
@@ -114,12 +103,14 @@ class Workspace extends Component<Props> {
       top: 20,
       left: 20,
       title: resId,
-      content: res
+      value: res,
+      dirty: false,
+      type
     };
 
     this.setState(prevState =>
       update(prevState, {
-        resources: { [resId.toString()]: { $set: entry } }
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
@@ -134,18 +125,43 @@ class Workspace extends Component<Props> {
         }
       })
     );
-    log.silly(this.state);
+  }
+
+  onDataChange(id, data) {
+    const { resources } = this.state;
+    const entry = resources[id];
+    if (!entry) {
+      log.error(`Unable to find resource ${id}`);
+      return;
+    }
+
+    this.setState(prevState =>
+      update(prevState, {
+        resources: {
+          [id]: {
+            $merge: { dirty: true, value: data }
+          }
+        }
+      })
+    );
   }
 
   render() {
     const { connectDropTarget } = this.props;
-    const { resources } = this.state;
+    const { resources, schemas } = this.state;
 
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
           {Object.keys(resources).map(key => {
-            const { left, top } = resources[key];
+            const { left, top, value, type, dirty } = resources[key];
+            const schema = schemas[type];
+
+            const selfThis = this;
+            const onChange = function changeWrapper(event) {
+              selfThis.onDataChange(key, event.formData);
+            };
+
             return (
               <Dragable
                 key={key}
@@ -155,7 +171,12 @@ class Workspace extends Component<Props> {
                 connectDragSource=""
                 isDragging="false"
               >
-                <ResourceForm name={key} schema={defaultSchema} />
+                <ResourceForm
+                  name={dirty ? `${key}*` : key}
+                  schema={schema}
+                  data={value}
+                  onChange={onChange}
+                />
               </Dragable>
             );
           })}
