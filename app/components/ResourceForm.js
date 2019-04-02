@@ -26,26 +26,26 @@ export default class ResourceForm extends Component<Props> {
 
         <div className='card-body'>
           <form>
-            <div className="form-group row">
+            <div className="form-group row mb-1">
               <label htmlFor="inputEmail3" className="w-25 col-form-label col-form-label-sm">Email:</label>
               <div className="w-75">
                 <input type="email" className="form-control form-control-sm" id="inputEmail3" placeholder="Email"/>
               </div>
             </div>
-            <div className="form-group row">
+            <div className="form-group row mb-1">
               <label htmlFor="inputPassword3" className="w-25 col-form-label col-form-label-sm">Passwdsadasddasdasdord</label>
               <div className="w-75">
                 <input type="password" className="form-control form-control-sm" id="inputPassword3" placeholder="Password"/>
               </div>
             </div>
-            {/*<div className="form-group row">*/}
-            {/*<div className="col-sm-2">Checkbox</div>*/}
-            {/*<div className="col-sm-10">*/}
-            {/*<div className="form-check">*/}
-            {/*<input className="form-check-input" type="checkbox" id="gridCheck1"/>*/}
-            {/*</div>*/}
-            {/*</div>*/}
-            {/*</div>*/}
+            <div className="form-group row mb-1">
+              <label htmlFor="inputEmail3" className="w-25 col-form-label col-form-label-sm">Checkbox test:</label>
+              <div className="w-75">
+                <div className="form-check">
+                  <input className="form-check-input" type="checkbox" id="gridCheck1"/>
+                </div>
+              </div>
+            </div>
           </form>
         </div>
 
