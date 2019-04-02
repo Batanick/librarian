@@ -1,12 +1,10 @@
 // @flow
 import React, {Component} from 'react';
-import Form from 'react-jsonschema-form';
 import PropTypes from 'prop-types';
 
 const log = require('electron-log');
 
-
-import styles from './ResourceForm.css';
+// import './ResourceForm.css';
 
 type Props = {
   name: PropTypes.string,
@@ -15,34 +13,42 @@ type Props = {
   onChange: PropTypes.func
 };
 
-function Tpl(props) {
-  const {id, label, required, children} = props;
-  if (id === "root") {
-    return (<div>{children}</div>)
-  }
-
-  return (
-    <div className="form-group input-group-sm">
-      <label className="control-label col-sm-2 lb-sm" htmlFor={id}>{label}{required ? "*" : null}</label>
-      <div className="col-md-3 input-group-sm">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export default class ResourceForm extends Component<Props> {
   render() {
-    const {name, schema, onChange, data} = this.props;
+
+    const {name} = this.props;
 
     return (
-      <div className={"resource-form"} style={styles}>
-        <div className='card-header'>{name}</div>
-        <div>
-          <Form className="form-horizontal col-lg-10" schema={schema} onChange={onChange} formData={data} FieldTemplate={Tpl}>
-            <br/>
-          </Form>
+      <div className="card">
+        <div className='card-header'>
+          PrizeBox: 12345
         </div>
+
+        <div className='card-body'>
+          <form>
+            <div className="form-group row">
+              <label htmlFor="inputEmail3" className="w-25 col-form-label col-form-label-sm">Email:</label>
+              <div className="w-75">
+                <input type="email" className="form-control form-control-sm" id="inputEmail3" placeholder="Email"/>
+              </div>
+            </div>
+            <div className="form-group row">
+              <label htmlFor="inputPassword3" className="w-25 col-form-label col-form-label-sm">Passwdsadasddasdasdord</label>
+              <div className="w-75">
+                <input type="password" className="form-control form-control-sm" id="inputPassword3" placeholder="Password"/>
+              </div>
+            </div>
+            {/*<div className="form-group row">*/}
+            {/*<div className="col-sm-2">Checkbox</div>*/}
+            {/*<div className="col-sm-10">*/}
+            {/*<div className="form-check">*/}
+            {/*<input className="form-check-input" type="checkbox" id="gridCheck1"/>*/}
+            {/*</div>*/}
+            {/*</div>*/}
+            {/*</div>*/}
+          </form>
+        </div>
+
       </div>
     );
   }
