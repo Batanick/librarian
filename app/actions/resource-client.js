@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import {BrowserWindow} from 'electron';
 
 import log from 'electron-log';
 
@@ -7,7 +7,7 @@ import * as Consts from '../constants/constants';
 
 import ResourceSystem from './resource-system';
 
-const { dialog, ipcMain } = require('electron');
+const {dialog, ipcMain} = require('electron');
 
 export default class ResourceClient {
   mainWindow: BrowserWindow;
@@ -21,6 +21,19 @@ export default class ResourceClient {
     ipcMain.on(Events.DIALOG_SCHEMA_TYPE_SELECTED, (event, arg) => {
       this.createResourceOfType(arg);
     });
+
+    ipcMain.on(Events.WORKSPACE_READY, () => {
+      if (this.resourceSystem.schemas) {
+        this.mainWindow.webContents.send(
+          Events.WORKSPACE_UPDATE_SCHEMAS,
+          this.resourceSystem.schemas
+        );
+      }
+    });
+
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true') {
+      this.loadDefaultFolder();
+    }
   }
 
   switchFolder() {
@@ -64,7 +77,7 @@ export default class ResourceClient {
 
     const path = dialog.showSaveDialog({
       defaultPath: this.resourceSystem.path,
-      filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
+      filters: [{name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE]}]
     });
     if (!path) {
       return;

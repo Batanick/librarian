@@ -10,13 +10,12 @@
  *
  * @flow
  */
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import {app, BrowserWindow, ipcMain} from 'electron';
+import {autoUpdater} from 'electron-updater';
 import log from 'electron-log';
 
 import MenuBuilder from './menu';
 import ResourceClient from './actions/resource-client';
-import * as Consts from './constants/events';
 
 export default class AppUpdater {
   constructor() {
@@ -60,16 +59,6 @@ app.on('window-all-closed', () => {
   // after all windows have been closed
   if (process.platform !== 'darwin') {
     app.quit();
-  }
-});
-
-ipcMain.once(Consts.WORKSPACE_READY, () => {
-  log.silly('Workspace ready signal received');
-  if (
-    process.env.NODE_ENV === 'development' ||
-    process.env.DEBUG_PROD === 'true'
-  ) {
-    resourceClient.loadDefaultFolder();
   }
 });
 

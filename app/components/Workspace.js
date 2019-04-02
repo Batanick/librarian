@@ -1,8 +1,8 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
@@ -15,7 +15,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -39,7 +39,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
+    isOverCurrent: monitor.isOver({shallow: true}),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -58,14 +58,52 @@ const target = {
   }
 };
 
+const defaultSchema = {
+  "$id" : "SimpleSchema",
+  "type": "object",
+  "required": ["firstName", "lastName"],
+  "properties": {
+    "firstName": {
+      "type": "string",
+      "title": "First name",
+      "default": "Chuck"
+    },
+    "lastName": {
+      "type": "string",
+      "title": "Last name"
+    },
+    "age": {
+      "type": "integer",
+      "title": "Age"
+    },
+    "bio": {
+      "type": "string",
+      "title": "Bio"
+    },
+    "password": {
+      "type": "string",
+      "title": "Password",
+      "minLength": 3
+    },
+    "telephone": {
+      "type": "string",
+      "title": "Telephone",
+      "minLength": 10
+    }
+  }
+};
+
+
 class Workspace extends Component<Props> {
   props: Props;
 
   constructor(...args) {
     super(args);
     this.state = {
-      resources: {},
-      schemas: null
+      resources: {
+        ResourceId: {top: 20, left: 80, title: 'Drag me around', value: {}, type: "default"},
+      },
+      schemas: {'default': defaultSchema}
     };
   }
 
@@ -77,7 +115,7 @@ class Workspace extends Component<Props> {
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
     });
-    ipcRenderer.send(Events.WORKSPACE_READY);
+    // ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
   componentWillUnmount() {
@@ -110,7 +148,7 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: { [resId]: { $set: entry } }
+        resources: {[resId]: {$set: entry}}
       })
     );
   }
@@ -120,7 +158,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: { left, top }
+            $merge: {left, top}
           }
         }
       })
@@ -128,7 +166,7 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(id, data) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const entry = resources[id];
     if (!entry) {
       log.error(`Unable to find resource ${id}`);
@@ -139,7 +177,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: { dirty: true, value: data }
+            $merge: {dirty: true, value: data}
           }
         }
       })
@@ -147,14 +185,14 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
-    const { resources, schemas } = this.state;
+    const {connectDropTarget} = this.props;
+    const {resources, schemas} = this.state;
 
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
           {Object.keys(resources).map(key => {
-            const { left, top, value, type, dirty } = resources[key];
+            const {left, top, value, type, dirty} = resources[key];
             const schema = schemas[type];
 
             const selfThis = this;
