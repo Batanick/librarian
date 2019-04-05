@@ -1,52 +1,61 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Dragable from "./Workspace";
-import InputField from "./custom-inputs/InputField";
+import InputField from './custom-inputs/InputField';
 
-const log = require('electron-log');
+// const log = require('electron-log');
 
 // import './ResourceForm.css';
 
 type Props = {
   name: PropTypes.string,
   schema: PropTypes.obj,
-  data: PropTypes.obj
+  data: PropTypes.obj,
+  onChange: PropTypes.fun
 };
 
 export default class ResourceForm extends Component<Props> {
-  render() {
-    const {name, schema} = this.props;
+  props: Props;
 
-    log.silly(schema);
+  constructor(...args) {
+    super(args);
+  }
+
+  render() {
+    const { name, schema, data, onChange } = this.props;
     return (
       <div className="card">
-        <div className='card-header'>
-          {name}
-        </div>
+        <div className="card-header">{name}</div>
 
-        <div className='card-body'>
+        <div className="card-body">
           <form>
             {Object.keys(schema.properties).map(key => {
-              // "firstName": {
-              //   "type": "string",
-              //     "title": "First name",
-              //     "default": "Chuck"
-              // }
               const fieldInfo = schema.properties[key];
+              const fieldData = data[key];
 
               return (
                 <div className="form-group row mb-1" key={key}>
-                  <label htmlFor="inputEmail3" className="w-25 col-form-label col-form-label-sm">{fieldInfo.title}</label>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-for */}
+                  <label
+                    htmlFor={key}
+                    className="w-25 col-form-label col-form-label-sm"
+                  >
+                    {fieldInfo.title}
+                  </label>
                   <div className="w-75">
-                    <InputField type={"string"} defaultValue={fieldInfo.default} value={"empty"} id={key}/>
+                    <InputField
+                      id={key}
+                      type="string"
+                      defaultValue={fieldInfo.default}
+                      value={fieldData}
+                      onChangeField={onChange}
+                    />
                   </div>
                 </div>
               );
             })}
           </form>
         </div>
-
       </div>
     );
   }

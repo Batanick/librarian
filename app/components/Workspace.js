@@ -1,8 +1,8 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 // noinspection ES6CheckImport
-import {DropTarget} from 'react-dnd';
+import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
@@ -15,7 +15,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const {ipcRenderer} = window.require('electron');
+const { ipcRenderer } = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -39,7 +39,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({shallow: true}),
+    isOverCurrent: monitor.isOver({ shallow: true }),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -59,40 +59,39 @@ const target = {
 };
 
 const defaultSchema = {
-  "$id" : "SimpleSchema",
-  "type": "object",
-  "required": ["firstName", "lastName"],
-  "properties": {
-    "firstName": {
-      "type": "string",
-      "title": "First name",
-      "default": "Chuck"
+  $id: 'SimpleSchema',
+  type: 'object',
+  required: ['firstName', 'lastName'],
+  properties: {
+    firstName: {
+      type: 'string',
+      title: 'First name',
+      default: 'Chuck'
     },
-    "lastName": {
-      "type": "string",
-      "title": "Last name"
+    lastName: {
+      type: 'string',
+      title: 'Last name'
     },
-    "age": {
-      "type": "integer",
-      "title": "Age"
+    age: {
+      type: 'integer',
+      title: 'Age'
     },
-    "bio": {
-      "type": "string",
-      "title": "Bio"
+    bio: {
+      type: 'string',
+      title: 'Bio'
     },
-    "password": {
-      "type": "string",
-      "title": "Password",
-      "minLength": 3
+    password: {
+      type: 'string',
+      title: 'Password',
+      minLength: 3
     },
-    "telephone": {
-      "type": "string",
-      "title": "Telephone",
-      "minLength": 10
+    telephone: {
+      type: 'string',
+      title: 'Telephone',
+      minLength: 10
     }
   }
 };
-
 
 class Workspace extends Component<Props> {
   props: Props;
@@ -101,9 +100,22 @@ class Workspace extends Component<Props> {
     super(args);
     this.state = {
       resources: {
-        ResourceId: {top: 20, left: 80, title: 'Drag me around', value: {}, type: "default"},
+        ResourceId: {
+          top: 20,
+          left: 80,
+          title: 'Drag me around',
+          value: { age: 42 },
+          type: 'SimpleSchema'
+        },
+        ResourceId2: {
+          top: 50,
+          left: 130,
+          title: 'Drag me around',
+          value: { age: 43 },
+          type: 'SimpleSchema'
+        }
       },
-      schemas: {'default': defaultSchema}
+      schemas: { SimpleSchema: defaultSchema }
     };
   }
 
@@ -142,13 +154,12 @@ class Workspace extends Component<Props> {
       left: 20,
       title: resId,
       value: res,
-      dirty: false,
       type
     };
 
     this.setState(prevState =>
       update(prevState, {
-        resources: {[resId]: {$set: entry}}
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
@@ -158,26 +169,28 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {left, top}
+            $merge: { left, top }
           }
         }
       })
     );
   }
 
-  onDataChange(id, data) {
-    const {resources} = this.state;
-    const entry = resources[id];
+  onDataChange(resId, field, fieldValue) {
+    log.silly(resId, field, fieldValue);
+
+    const { resources } = this.state;
+    const entry = resources[resId];
     if (!entry) {
-      log.error(`Unable to find resource ${id}`);
+      log.error(`Unable to find resource ${resId}`);
       return;
     }
 
     this.setState(prevState =>
       update(prevState, {
         resources: {
-          [id]: {
-            $merge: {dirty: true, value: data}
+          [resId]: {
+            value: { $merge: { [field]: fieldValue } }
           }
         }
       })
@@ -185,19 +198,22 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const {connectDropTarget} = this.props;
-    const {resources, schemas} = this.state;
+    const { connectDropTarget } = this.props;
+    const { resources, schemas } = this.state;
+
+    log.silly(schemas);
+    log.silly(resources);
 
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
           {Object.keys(resources).map(key => {
-            const {left, top, value, type, dirty} = resources[key];
+            const { left, top, value, type } = resources[key];
             const schema = schemas[type];
 
             const selfThis = this;
-            const onChange = function changeWrapper(event) {
-              selfThis.onDataChange(key, event.formData);
+            const onChange = function changeWrapper(fieldId, fieldValue) {
+              selfThis.onDataChange(key, fieldId, fieldValue);
             };
 
             return (
@@ -210,9 +226,9 @@ class Workspace extends Component<Props> {
                 isDragging="false"
               >
                 <ResourceForm
-                  name={dirty ? `${key}*` : key}
                   schema={schema}
                   data={value}
+                  name={key}
                   onChange={onChange}
                 />
               </Dragable>
