@@ -1,4 +1,4 @@
-import {BrowserWindow} from 'electron';
+import { BrowserWindow } from 'electron';
 
 import log from 'electron-log';
 
@@ -7,12 +7,15 @@ import * as Consts from '../constants/constants';
 
 import ResourceSystem from './resource-system';
 
-const {dialog, ipcMain} = require('electron');
+const { dialog, ipcMain } = require('electron');
+const ProgressBar = require('electron-progressbar');
 
 export default class ResourceClient {
   mainWindow: BrowserWindow;
 
   resourceSystem: ResourceSystem;
+
+  progressBar: null;
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
@@ -31,7 +34,14 @@ export default class ResourceClient {
       }
     });
 
-    if (process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true') {
+    ipcMain.on(Events.WORKSPACE_SAVE_ALL_DIRTY, (event, arg) => {
+      this.saveAllResources(arg);
+    });
+
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+    ) {
       this.loadDefaultFolder();
     }
   }
@@ -66,6 +76,28 @@ export default class ResourceClient {
     );
   }
 
+  saveAll() {
+    this.progressBar = new ProgressBar({
+      text: 'Saving all dirty resources...',
+      detail: 'Saving...',
+      browserWindow: {
+        parent: this.mainWindow
+      }
+    });
+
+    this.mainWindow.webContents.send(Events.WORKSPACE_SAVE_ALL_DIRTY);
+  }
+
+  saveAllResources(resources) {
+    const resSystem = this.resourceSystem;
+    Object.keys(resources).forEach(key => {
+      resSystem.saveResource(key, resources[key]);
+    });
+
+    this.progressBar.close();
+    this.progressBar = null;
+  }
+
   createResourceOfType(type) {
     log.info(`Creating new resource of type: ${type}`);
 
@@ -77,7 +109,7 @@ export default class ResourceClient {
 
     const path = dialog.showSaveDialog({
       defaultPath: this.resourceSystem.path,
-      filters: [{name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE]}]
+      filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
     });
     if (!path) {
       return;

@@ -82,4 +82,24 @@ export default class ResourceSystem {
     this.resources[resId] = res;
     return res;
   }
+
+  saveResource(resId, res) {
+    res[Consts.FIELD_NAME_ID] = resId;
+    const content = JSON.stringify(res, null, 4);
+
+    const filePath = `${this.path}/${resId}.${Consts.EXTENSION_RESOURCE}`;
+    log.info(
+      `Updating resource ${resId}: ${JSON.stringify(res)} (${filePath})`
+    );
+
+    try {
+      fs.writeFileSync(filePath, content, 'utf-8');
+    } catch (e) {
+      dialog.showErrorBox('Something went wrong', e);
+      return null;
+    }
+
+    this.resources[resId] = res;
+    return res;
+  }
 }

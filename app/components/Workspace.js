@@ -127,7 +127,10 @@ class Workspace extends Component<Props> {
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
     });
-    // ipcRenderer.send(Events.WORKSPACE_READY);
+    ipcRenderer.on(Events.WORKSPACE_SAVE_ALL_DIRTY, () => {
+      selfThis.saveDirty();
+    });
+    ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
   componentWillUnmount() {
@@ -164,6 +167,20 @@ class Workspace extends Component<Props> {
     );
   }
 
+  saveDirty() {
+    const { resources } = this.state;
+    const result = {};
+    Object.keys(resources).forEach(key => {
+      const res = resources[key];
+      if (res.dirty) {
+        result[key] = res.value;
+      }
+    });
+
+    log.silly(`Sending save response: ${JSON.stringify(result)}`);
+    ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
+  }
+
   moveChild(id, left, top) {
     this.setState(prevState =>
       update(prevState, {
@@ -190,7 +207,8 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: { $merge: { [field]: fieldValue } }
+            value: { $merge: { [field]: fieldValue } },
+            $merge: { dirty: true }
           }
         }
       })
