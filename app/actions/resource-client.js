@@ -1,35 +1,126 @@
+import { BrowserWindow } from 'electron';
+
 import log from 'electron-log';
 
-import {BrowserWindow} from 'electron';
+import * as Events from '../constants/events';
+import * as Consts from '../constants/constants';
 
-import * as Events from '../constants/events'
 import ResourceSystem from './resource-system';
 
-const {dialog} = require('electron');
+const { dialog, ipcMain } = require('electron');
+const ProgressBar = require('electron-progressbar');
 
 export default class ResourceClient {
   mainWindow: BrowserWindow;
+
   resourceSystem: ResourceSystem;
+
+  progressBar: null;
 
   constructor(mainWindow: BrowserWindow) {
     this.mainWindow = mainWindow;
     this.resourceSystem = new ResourceSystem();
+
+    ipcMain.on(Events.DIALOG_SCHEMA_TYPE_SELECTED, (event, arg) => {
+      this.createResourceOfType(arg);
+    });
+
+    ipcMain.on(Events.WORKSPACE_READY, () => {
+      if (this.resourceSystem.schemas) {
+        this.mainWindow.webContents.send(
+          Events.WORKSPACE_UPDATE_SCHEMAS,
+          this.resourceSystem.schemas
+        );
+      }
+    });
+
+    ipcMain.on(Events.WORKSPACE_SAVE_ALL_DIRTY, (event, arg) => {
+      this.saveAllResources(arg);
+    });
+
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+    ) {
+      this.loadDefaultFolder();
+    }
   }
 
   switchFolder() {
-    const path = dialog.showOpenDialog({properties: ['openFile', 'openDirectory']});
+    const path = dialog.showOpenDialog({
+      properties: ['openFile', 'openDirectory']
+    });
     if (!path) {
       return;
     }
     this.resourceSystem.loadFolder(path[0]);
-    this.mainWindow.webContents.send(Events.UPDATE_SCHEMAS, this.resourceSystem.schemas);
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_UPDATE_SCHEMAS,
+      this.resourceSystem.schemas
+    );
+  }
+
+  loadDefaultFolder() {
+    this.resourceSystem.loadFolder('./res');
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_UPDATE_SCHEMAS,
+      this.resourceSystem.schemas
+    );
   }
 
   createResource() {
-    log.info("Creating resource");
+    const schemaTypes = Object.keys(this.resourceSystem.schemas);
+    this.mainWindow.webContents.send(
+      Events.DIALOG_SELECT_SCHEMA_TYPE,
+      schemaTypes
+    );
   }
 
-  addingResource() {
-    log.info("Adding resource");
+  saveAll() {
+    this.progressBar = new ProgressBar({
+      text: 'Saving all dirty resources...',
+      detail: 'Saving...',
+      browserWindow: {
+        parent: this.mainWindow
+      }
+    });
+
+    this.mainWindow.webContents.send(Events.WORKSPACE_SAVE_ALL_DIRTY);
+  }
+
+  saveAllResources(resources) {
+    const resSystem = this.resourceSystem;
+    Object.keys(resources).forEach(key => {
+      resSystem.saveResource(key, resources[key]);
+    });
+
+    this.progressBar.close();
+    this.progressBar = null;
+  }
+
+  createResourceOfType(type) {
+    log.info(`Creating new resource of type: ${type}`);
+
+    const schema = this.resourceSystem.schemas[type];
+    if (!schema) {
+      log.error(`Unknown schema: ${type}`);
+      return;
+    }
+
+    const path = dialog.showSaveDialog({
+      defaultPath: this.resourceSystem.path,
+      filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
+    });
+    if (!path) {
+      return;
+    }
+
+    const created = this.resourceSystem.createResource(type, path);
+    if (!created) {
+      return;
+    }
+
+    log.silly(`New resource created: ${JSON.stringify(created)}`);
+    this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, created);
   }
 }

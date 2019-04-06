@@ -10,8 +10,8 @@
  *
  * @flow
  */
-import { app, BrowserWindow } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import {app, BrowserWindow, ipcMain} from 'electron';
+import {autoUpdater} from 'electron-updater';
 import log from 'electron-log';
 
 import MenuBuilder from './menu';

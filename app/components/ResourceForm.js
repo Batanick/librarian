@@ -1,39 +1,60 @@
 // @flow
 import React, { Component } from 'react';
-import Form from 'react-jsonschema-form';
 import PropTypes from 'prop-types';
+import InputField from './custom-inputs/InputField';
 
-import styles from 'bootswatch/dist/darkly/bootstrap.min.css';
+// const log = require('electron-log');
+
+// import './ResourceForm.css';
 
 type Props = {
-  name: PropTypes.string
+  name: PropTypes.string,
+  schema: PropTypes.obj,
+  data: PropTypes.obj,
+  onChange: PropTypes.fun
 };
-
-const schema = {
-  type: 'object',
-  required: ['title'],
-  properties: {
-    title: { type: 'string', title: 'Title', default: 'A new task' },
-    done: { type: 'boolean', title: 'Done?', default: false }
-  }
-};
-
-const log = type => console.log.bind(console, type);
 
 export default class ResourceForm extends Component<Props> {
-  render() {
-    const { name } = this.props;
+  props: Props;
 
+  constructor(...args) {
+    super(args);
+  }
+
+  render() {
+    const { name, schema, data, onChange } = this.props;
     return (
-      <div className={styles.card}>
-        <div className={styles['card-header']}>{name}</div>
-        <div className={styles['card-body']}>
-          <Form
-            schema={schema}
-            // onChange={log('changed')}
-            onSubmit={log('submitted')}
-            onError={log('errors')}
-          />
+      <div className="card">
+        <div className="card-header">{name}</div>
+
+        <div className="card-body">
+          <form>
+            {Object.keys(schema.properties).map(key => {
+              const fieldInfo = schema.properties[key];
+              const fieldData = data[key];
+
+              return (
+                <div className="form-group row mb-1" key={key}>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-for */}
+                  <label
+                    htmlFor={key}
+                    className="w-25 col-form-label col-form-label-sm"
+                  >
+                    {fieldInfo.title}
+                  </label>
+                  <div className="w-75">
+                    <InputField
+                      id={key}
+                      type="string"
+                      defaultValue={fieldInfo.default}
+                      value={fieldData}
+                      onChangeField={onChange}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </form>
         </div>
       </div>
     );
