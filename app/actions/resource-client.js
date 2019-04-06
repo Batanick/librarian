@@ -91,7 +91,7 @@ export default class ResourceClient {
   saveAllResources(resources) {
     const resSystem = this.resourceSystem;
     Object.keys(resources).forEach(key => {
-      resSystem.saveResource(key, resources[key]);
+      resSystem.saveResource(resources[key]);
     });
 
     this.mainWindow.webContents.send(
@@ -113,7 +113,7 @@ export default class ResourceClient {
     }
 
     const path = dialog.showSaveDialog({
-      defaultPath: this.resourceSystem.path,
+      defaultPath: this.resourceSystem.rootDirPath,
       filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
     });
     if (!path) {

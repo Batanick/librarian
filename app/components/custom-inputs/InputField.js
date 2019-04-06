@@ -9,7 +9,7 @@ type Props = {
   type: PropTypes.string,
   defaultValue: PropTypes.string,
   value: PropTypes.string,
-  onChangeField: PropTypes.fun
+  onChangeField: PropTypes.func
 };
 
 export default class InputField extends Component<Props> {
