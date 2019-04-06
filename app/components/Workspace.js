@@ -255,6 +255,8 @@ class Workspace extends Component<Props> {
               selfThis.onDataChange(key, fieldId, fieldValue);
             };
 
+            const name = value[Consts.FIELD_NAME_NAME];
+
             return (
               <Dragable
                 key={key}
@@ -267,9 +269,10 @@ class Workspace extends Component<Props> {
                 <ResourceForm
                   schema={schema}
                   data={value}
-                  name={key}
+                  name={name}
                   dirty={dirty}
                   onChange={onChange}
+                  resId={key}
                 />
               </Dragable>
             );

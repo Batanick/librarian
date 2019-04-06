@@ -2,7 +2,8 @@ import log from 'electron-log';
 
 import * as Consts from '../constants/constants';
 
-const idField = '$id';
+const uuid = require('uuid');
+const path = require('path');
 const fs = require('fs');
 
 const { dialog } = require('electron');
@@ -12,16 +13,16 @@ export default class ResourceSystem {
 
   resources: null;
 
-  path: null;
+  rootDirPath: null;
 
-  loadFolder(path) {
+  loadFolder(folderPath) {
     this.schemas = {};
     this.resources = {};
 
-    log.info(`Loading resource folder: ${path}`);
+    log.info(`Loading resource folder: ${folderPath}`);
 
-    this.loadSchemas(`${path}\\types`);
-    this.path = path;
+    this.loadSchemas(`${folderPath}\\types`);
+    this.rootDirPath = folderPath;
   }
 
   loadSchemas(schemaPath) {
@@ -47,13 +48,13 @@ export default class ResourceSystem {
     log.info(`Loaded ${counter} schemas`);
   }
 
-  loadSchema(path) {
-    const content = fs.readFileSync(path);
+  loadSchema(schemaPath) {
+    const content = fs.readFileSync(schemaPath);
     const jsonContent = JSON.parse(content);
-    const id = jsonContent[idField];
+    const id = jsonContent[Consts.FIELD_NAME_ID];
 
     if (!id) {
-      log.error(`Template:${path} don't specify resource template id`);
+      log.error(`Template:${schemaPath} don't specify resource template id`);
       return false;
     }
     if (this.schemas[id]) {
@@ -65,29 +66,43 @@ export default class ResourceSystem {
     return true;
   }
 
-  createResource(type, path) {
+  createResource(type, resourcePath) {
     const res = {};
-    const resId = Math.floor(Math.random() * 1000000); // TODO: have proper solution here
+    const resId = uuid.v4();
     res[Consts.FIELD_NAME_ID] = resId;
     res[Consts.FIELD_NAME_TYPE] = type;
 
     const content = JSON.stringify(res, null, 4);
     try {
-      fs.writeFileSync(path, content, 'utf-8');
+      fs.writeFileSync(resourcePath, content, 'utf-8');
     } catch (e) {
       dialog.showErrorBox('Something went wrong', e);
       return null;
     }
 
+    res[Consts.FIELD_NAME_NAME] = path
+      .basename(resourcePath)
+      .split('.')
+      .slice(0, -1)
+      .join('.');
+    res[Consts.FIELD_NAME_PATH] = resourcePath;
+
     this.resources[resId] = res;
     return res;
   }
 
-  saveResource(resId, res) {
-    res[Consts.FIELD_NAME_ID] = resId;
-    const content = JSON.stringify(res, null, 4);
+  saveResource(res) {
+    const filePath = res[Consts.FIELD_NAME_PATH];
+    const resId = res[Consts.FIELD_NAME_ID];
 
-    const filePath = `${this.path}/${resId}.${Consts.EXTENSION_RESOURCE}`;
+    const objectToSave = Object.assign({}, res);
+
+    // removing fields that we generating on the fly
+    delete objectToSave[Consts.FIELD_NAME_PATH];
+    delete objectToSave[Consts.FIELD_NAME_NAME];
+
+    const content = JSON.stringify(objectToSave, null, 4);
+
     log.info(
       `Updating resource ${resId}: ${JSON.stringify(res)} (${filePath})`
     );
