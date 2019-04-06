@@ -2,7 +2,7 @@ import log from 'electron-log';
 
 import * as Consts from '../constants/constants';
 
-const uuid = require('uuid');
+const uuidv4 = require('uuid/v4');
 const path = require('path');
 const fs = require('fs');
 
@@ -68,7 +68,7 @@ export default class ResourceSystem {
 
   createResource(type, resourcePath) {
     const res = {};
-    const resId = uuid.v4();
+    const resId = uuidv4();
     res[Consts.FIELD_NAME_ID] = resId;
     res[Consts.FIELD_NAME_TYPE] = type;
 
