@@ -29,7 +29,7 @@ export default class ModalSelect extends Component<Props> {
 
   handleSubmit = () => {
     const { onSelect } = this.props;
-    onSelect(this.inputRef);
+    onSelect(this.inputRef.current.value);
   };
 
   handleClose = () => {

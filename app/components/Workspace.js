@@ -130,6 +130,9 @@ class Workspace extends Component<Props> {
     ipcRenderer.on(Events.WORKSPACE_SAVE_ALL_DIRTY, () => {
       selfThis.saveDirty();
     });
+    ipcRenderer.on(Events.WORKSPACE_RESOURCES_SAVED, (event, ids) => {
+      selfThis.updateDirty(ids);
+    });
     ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
@@ -181,6 +184,24 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
   }
 
+  updateDirty(ids) {
+    const { resources } = this.state;
+    ids.forEach(id => {
+      const res = resources[id];
+      if (res) {
+        this.setState(prevState =>
+          update(prevState, {
+            resources: {
+              [id]: {
+                $merge: { dirty: false }
+              }
+            }
+          })
+        );
+      }
+    });
+  }
+
   moveChild(id, left, top) {
     this.setState(prevState =>
       update(prevState, {
@@ -226,7 +247,7 @@ class Workspace extends Component<Props> {
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div id="workspace" style={Object.assign({}, styles)}>
           {Object.keys(resources).map(key => {
-            const { left, top, value, type } = resources[key];
+            const { left, top, value, type, dirty } = resources[key];
             const schema = schemas[type];
 
             const selfThis = this;
@@ -247,6 +268,7 @@ class Workspace extends Component<Props> {
                   schema={schema}
                   data={value}
                   name={key}
+                  dirty={dirty}
                   onChange={onChange}
                 />
               </Dragable>

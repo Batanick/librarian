@@ -94,6 +94,11 @@ export default class ResourceClient {
       resSystem.saveResource(key, resources[key]);
     });
 
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_RESOURCES_SAVED,
+      Object.keys(resources)
+    );
+
     this.progressBar.close();
     this.progressBar = null;
   }

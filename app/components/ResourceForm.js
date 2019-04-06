@@ -9,6 +9,7 @@ import InputField from './custom-inputs/InputField';
 
 type Props = {
   name: PropTypes.string,
+  dirty: PropTypes.bool,
   schema: PropTypes.obj,
   data: PropTypes.obj,
   onChange: PropTypes.fun
@@ -22,10 +23,10 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
-    const { name, schema, data, onChange } = this.props;
+    const { name, dirty, schema, data, onChange } = this.props;
     return (
       <div className="card">
-        <div className="card-header">{name}</div>
+        <div className="card-header">{dirty ? `${name}*` : name}</div>
 
         <div className="card-body">
           <form>
