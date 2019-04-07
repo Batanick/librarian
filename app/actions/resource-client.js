@@ -53,7 +53,15 @@ export default class ResourceClient {
     if (!path) {
       return;
     }
-    this.resourceSystem.loadFolder(path[0]);
+    ResourceClient.executeModal(
+      this.mainWindow,
+      `Loading folder: ${path}`,
+      'Loading resources',
+      () => {
+        this.resourceSystem.loadFolder(path[0]);
+      }
+    );
+
     this.mainWindow.webContents.send(
       Events.WORKSPACE_UPDATE_SCHEMAS,
       this.resourceSystem.schemas
@@ -61,10 +69,17 @@ export default class ResourceClient {
   }
 
   loadDefaultFolder() {
-    this.resourceSystem.loadFolder('./res');
-    this.mainWindow.webContents.send(
-      Events.WORKSPACE_UPDATE_SCHEMAS,
-      this.resourceSystem.schemas
+    ResourceClient.executeModal(
+      this.mainWindow,
+      'Loading default folder',
+      'Loading resources',
+      () => {
+        this.resourceSystem.loadFolder('./res');
+        this.mainWindow.webContents.send(
+          Events.WORKSPACE_UPDATE_SCHEMAS,
+          this.resourceSystem.schemas
+        );
+      }
     );
   }
 
@@ -127,5 +142,24 @@ export default class ResourceClient {
 
     log.silly(`New resource created: ${JSON.stringify(created)}`);
     this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, created);
+  }
+
+  static executeModal(mainWindow, text, detail, action) {
+    const progressBar = new ProgressBar({
+      text,
+      detail,
+      browserWindow: {
+        parent: mainWindow
+      }
+    });
+
+    try {
+      action();
+    } catch (e) {
+      log.error(e);
+      dialog.showErrorBox('Something went wrong', e);
+    }
+
+    progressBar.close();
   }
 }

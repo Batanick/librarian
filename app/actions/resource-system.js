@@ -1,8 +1,9 @@
 import log from 'electron-log';
 
 import * as Consts from '../constants/constants';
+import * as Utils from './utils/file-utils';
 
-const uuidv4 = require('uuid/v4');
+const uuid = require('uuid/v4');
 const path = require('path');
 const fs = require('fs');
 
@@ -18,11 +19,12 @@ export default class ResourceSystem {
   loadFolder(folderPath) {
     this.schemas = {};
     this.resources = {};
+    this.rootDirPath = folderPath;
 
     log.info(`Loading resource folder: ${folderPath}`);
 
     this.loadSchemas(`${folderPath}\\types`);
-    this.rootDirPath = folderPath;
+    this.loadResources(folderPath);
   }
 
   loadSchemas(schemaPath) {
@@ -66,9 +68,55 @@ export default class ResourceSystem {
     return true;
   }
 
+  loadResources(folderPath) {
+    const files = Utils.searchDir(folderPath, fileName =>
+      fileName.endsWith(Consts.EXTENSION_RESOURCE)
+    );
+
+    const size = files.length;
+    for (let i = 0; i < size; i += 1) {
+      const res = this.loadResource(files[i]);
+      if (!res) {
+        log.error(`Unable to load resource file: ${res}`);
+      }
+    }
+  }
+
+  loadResource(resourcePath) {
+    try {
+      const content = fs.readFileSync(resourcePath, 'utf-8');
+      const res = JSON.parse(content);
+
+      res[Consts.FIELD_NAME_PATH] = resourcePath;
+      res[Consts.FIELD_NAME_NAME] = ResourceSystem.extractResourceName(
+        resourcePath
+      );
+
+      const id = res[Consts.FIELD_NAME_ID];
+      const type = res[Consts.FIELD_NAME_TYPE];
+
+      if (this.resources[id]) {
+        log.error(`Duplicate id: ${id}`);
+        return null;
+      }
+
+      if (!this.schemas[type]) {
+        log.error(`Unknown resource type: ${type}, resource: ${resourcePath}`);
+        return null;
+      }
+
+      this.resources[id] = res;
+
+      return res;
+    } catch (e) {
+      dialog.showErrorBox(`Unable to load resource: ${resourcePath}`, e);
+      return null;
+    }
+  }
+
   createResource(type, resourcePath) {
     const res = {};
-    const resId = uuidv4();
+    const resId = uuid();
     res[Consts.FIELD_NAME_ID] = resId;
     res[Consts.FIELD_NAME_TYPE] = type;
 
@@ -80,11 +128,9 @@ export default class ResourceSystem {
       return null;
     }
 
-    res[Consts.FIELD_NAME_NAME] = path
-      .basename(resourcePath)
-      .split('.')
-      .slice(0, -1)
-      .join('.');
+    res[Consts.FIELD_NAME_NAME] = ResourceSystem.extractResourceName(
+      resourcePath
+    );
     res[Consts.FIELD_NAME_PATH] = resourcePath;
 
     this.resources[resId] = res;
@@ -116,5 +162,13 @@ export default class ResourceSystem {
 
     this.resources[resId] = res;
     return res;
+  }
+
+  static extractResourceName(filePath) {
+    return path
+      .basename(filePath)
+      .split('.')
+      .slice(0, -1)
+      .join('.');
   }
 }
