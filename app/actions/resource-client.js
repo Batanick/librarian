@@ -118,6 +118,25 @@ export default class ResourceClient {
     this.progressBar = null;
   }
 
+  loadResource() {
+    const path = dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
+    });
+
+    if (!path) {
+      return;
+    }
+
+    const size = path.length;
+    for (let i = 0; i < size; i += 1) {
+      const res = this.resourceSystem.loadResource(path[i], true);
+      if (res) {
+        this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, res);
+      }
+    }
+  }
+
   createResourceOfType(type) {
     log.info(`Creating new resource of type: ${type}`);
 

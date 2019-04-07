@@ -213,7 +213,7 @@ export default class MenuBuilder {
             label: '&Add...',
             accelerator: 'Ctrl+O',
             click: () => {
-              console.log('Add resource');
+              this.client.loadResource();
             }
           },
           {

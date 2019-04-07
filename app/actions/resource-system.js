@@ -81,7 +81,7 @@ export default class ResourceSystem {
     }
   }
 
-  loadResource(resourcePath) {
+  static loadResourceFromFile(resourcePath) {
     try {
       const content = fs.readFileSync(resourcePath, 'utf-8');
       const res = JSON.parse(content);
@@ -89,26 +89,36 @@ export default class ResourceSystem {
       res[Consts.FIELD_NAME_PATH] = resourcePath;
       res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
 
-      const id = res[Consts.FIELD_NAME_ID];
-      const type = res[Consts.FIELD_NAME_TYPE];
-
-      if (this.resources[id]) {
-        log.error(`Duplicate id: ${id}`);
-        return null;
-      }
-
-      if (!this.schemas[type]) {
-        log.error(`Unknown resource type: ${type}, resource: ${resourcePath}`);
-        return null;
-      }
-
-      this.resources[id] = res;
-
       return res;
     } catch (e) {
+      log.error(e);
       dialog.showErrorBox(`Unable to load resource: ${resourcePath}`, e);
       return null;
     }
+  }
+
+  loadResource(resourcePath, ignoreDuplicates) {
+    const res = ResourceSystem.loadResourceFromFile(resourcePath);
+    if (!res) {
+      return null;
+    }
+
+    const id = res[Consts.FIELD_NAME_ID];
+    const type = res[Consts.FIELD_NAME_TYPE];
+
+    if (!ignoreDuplicates && this.resources[id]) {
+      log.error(`Duplicate id: ${id}`);
+      return null;
+    }
+
+    if (!this.schemas[type]) {
+      log.error(`Unknown resource type: ${type}, resource: ${resourcePath}`);
+      return null;
+    }
+
+    this.resources[id] = res;
+
+    return res;
   }
 
   createResource(type, resourcePath) {

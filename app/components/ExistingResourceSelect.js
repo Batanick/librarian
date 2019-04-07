@@ -26,7 +26,7 @@ export default class ExistingResourceSelect extends Component<Props> {
   constructor(...args) {
     super(args);
     this.state = {
-      dialogShow: true,
+      dialogShow: false,
       resources: {
         'dasdasjdas=das=dasd-as-da': {
           $path: 'c:/sdadsad',
