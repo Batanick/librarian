@@ -15,9 +15,12 @@ export default class ResourceSystem {
 
   rootDirPath: null;
 
+  index: null;
+
   loadFolder(folderPath) {
     this.schemas = {};
     this.resources = {};
+    this.index = {};
     this.rootDirPath = folderPath;
 
     log.info(`Loading resource folder: ${folderPath}`);
@@ -116,15 +119,13 @@ export default class ResourceSystem {
       return null;
     }
 
-    this.resources[id] = res;
-
+    this.register(res);
     return res;
   }
 
   createResource(type, resourcePath) {
     const res = {};
-    const resId = uuid();
-    res[Consts.FIELD_NAME_ID] = resId;
+    res[Consts.FIELD_NAME_ID] = uuid();
     res[Consts.FIELD_NAME_TYPE] = type;
 
     const content = JSON.stringify(res, null, 4);
@@ -138,7 +139,7 @@ export default class ResourceSystem {
     res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
     res[Consts.FIELD_NAME_PATH] = resourcePath;
 
-    this.resources[resId] = res;
+    this.register(res);
     return res;
   }
 
@@ -165,7 +166,19 @@ export default class ResourceSystem {
       return null;
     }
 
-    this.resources[resId] = res;
+    this.register(res);
     return res;
+  }
+
+  register(res) {
+    const resId = res[Consts.FIELD_NAME_ID];
+
+    const indexRecord = {};
+    indexRecord[Consts.FIELD_NAME_PATH] = res[Consts.FIELD_NAME_PATH];
+    indexRecord[Consts.FIELD_NAME_NAME] = res[Consts.FIELD_NAME_NAME];
+    indexRecord[Consts.FIELD_NAME_TYPE] = res[Consts.FIELD_NAME_TYPE];
+
+    this.index[resId] = indexRecord;
+    this.resources[resId] = res;
   }
 }

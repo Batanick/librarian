@@ -118,7 +118,7 @@ export default class ResourceClient {
     this.progressBar = null;
   }
 
-  loadResource() {
+  loadFromFile() {
     const path = dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
@@ -135,6 +135,13 @@ export default class ResourceClient {
         this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, res);
       }
     }
+  }
+
+  loadExisting() {
+    this.mainWindow.webContents.send(
+      Events.DIALOG_LOAD_EXISTING_RESOURCE,
+      this.resourceSystem.index
+    );
   }
 
   createResourceOfType(type) {

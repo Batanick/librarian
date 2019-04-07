@@ -27,13 +27,7 @@ export default class ExistingResourceSelect extends Component<Props> {
     super(args);
     this.state = {
       dialogShow: false,
-      resources: {
-        'dasdasjdas=das=dasd-as-da': {
-          $path: 'c:/sdadsad',
-          $name: 'SimpleResource',
-          $type: 'Simple'
-        }
-      },
+      resources: {},
       filter: null
     };
 
@@ -48,12 +42,25 @@ export default class ExistingResourceSelect extends Component<Props> {
   componentDidMount() {
     const selfThis = this;
     ipcRenderer.on(Events.DIALOG_LOAD_EXISTING_RESOURCE, (event, arg) => {
-      selfThis.showResourceSelect(arg);
+      selfThis.show(arg);
     });
   }
 
   componentWillUnmount() {
     ipcRenderer.removeAllListeners(Events.DIALOG_LOAD_EXISTING_RESOURCE);
+  }
+
+  show(index) {
+    this.setState(prevState =>
+      update(prevState, {
+        $set: {
+          resources: index,
+          dialogShow: true
+        }
+      })
+    );
+
+    this.filterRef.current.focus();
   }
 
   filterTable() {
@@ -82,7 +89,7 @@ export default class ExistingResourceSelect extends Component<Props> {
             <input
               ref={this.filterRef}
               className="form-control"
-              id="myInput"
+              id="focusInput"
               type="text"
               placeholder="Search.."
               onKeyUp={this.filterTable}

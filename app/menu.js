@@ -210,10 +210,17 @@ export default class MenuBuilder {
             }
           },
           {
-            label: '&Add...',
+            label: '&Load file...',
+            accelerator: 'Ctrl+Shift+O',
+            click: () => {
+              this.client.loadFromFile();
+            }
+          },
+          {
+            label: '&Load...',
             accelerator: 'Ctrl+O',
             click: () => {
-              this.client.loadResource();
+              this.client.loadExisting();
             }
           },
           {
