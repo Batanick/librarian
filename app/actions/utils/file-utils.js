@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-export default function searchDir(dir, filter) {
+export function searchDir(dir, filter) {
   let results = [];
   const list = fs.readdirSync(dir);
   list.forEach(file => {
@@ -18,4 +18,12 @@ export default function searchDir(dir, filter) {
     }
   });
   return results;
+}
+
+export function extractFileName(filePath) {
+  return path
+    .basename(filePath)
+    .split('.')
+    .slice(0, -1)
+    .join('.');
 }

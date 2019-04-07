@@ -1,4 +1,5 @@
 {
-    "$id": "8f90dbd5-207d-40e6-92d3-5c91488c2aa2",
-    "$type": "SimpleSchema"
+    "$id": "0aba07ca-c89a-4d0e-a843-6d46dd8fc993",
+    "$type": "SimpleSchema",
+    "age": "1234"
 }

@@ -4,7 +4,6 @@ import * as Consts from '../constants/constants';
 import * as Utils from './utils/file-utils';
 
 const uuid = require('uuid/v4');
-const path = require('path');
 const fs = require('fs');
 
 const { dialog } = require('electron');
@@ -88,9 +87,7 @@ export default class ResourceSystem {
       const res = JSON.parse(content);
 
       res[Consts.FIELD_NAME_PATH] = resourcePath;
-      res[Consts.FIELD_NAME_NAME] = ResourceSystem.extractResourceName(
-        resourcePath
-      );
+      res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
 
       const id = res[Consts.FIELD_NAME_ID];
       const type = res[Consts.FIELD_NAME_TYPE];
@@ -128,9 +125,7 @@ export default class ResourceSystem {
       return null;
     }
 
-    res[Consts.FIELD_NAME_NAME] = ResourceSystem.extractResourceName(
-      resourcePath
-    );
+    res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
     res[Consts.FIELD_NAME_PATH] = resourcePath;
 
     this.resources[resId] = res;
@@ -162,13 +157,5 @@ export default class ResourceSystem {
 
     this.resources[resId] = res;
     return res;
-  }
-
-  static extractResourceName(filePath) {
-    return path
-      .basename(filePath)
-      .split('.')
-      .slice(0, -1)
-      .join('.');
   }
 }

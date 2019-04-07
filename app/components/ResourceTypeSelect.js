@@ -10,7 +10,7 @@ const { ipcRenderer } = window.require('electron');
 
 type Props = {};
 
-export default class DialogHelper extends Component<Props> {
+export default class ResourceTypeSelect extends Component<Props> {
   props: Props;
 
   constructor(...args) {
@@ -26,7 +26,9 @@ export default class DialogHelper extends Component<Props> {
 
   componentDidMount() {
     const selfThis = this;
+    log.silly('2');
     ipcRenderer.on(Events.DIALOG_SELECT_SCHEMA_TYPE, (event, arg) => {
+      log.silly(arg);
       selfThis.showSchemaTypeSelection(arg);
     });
   }
