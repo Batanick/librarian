@@ -122,7 +122,7 @@ class Workspace extends Component<Props> {
   componentDidMount() {
     const selfThis = this;
     ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res) => {
-      selfThis.addNewResource(res);
+      selfThis.addResource(res);
     });
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
@@ -150,7 +150,7 @@ class Workspace extends Component<Props> {
     });
   }
 
-  addNewResource(res) {
+  addResource(res) {
     const resId = res[Consts.FIELD_NAME_ID];
     const type = res[Consts.FIELD_NAME_TYPE];
     log.info(`Loading resource [${resId}] of type ${type}`);

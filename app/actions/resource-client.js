@@ -25,6 +25,10 @@ export default class ResourceClient {
       this.createResourceOfType(arg);
     });
 
+    ipcMain.on(Events.DIALOG_SELECT_EXISTING_RESOURCE, (event, arg) => {
+      this.addExistingResources(arg);
+    });
+
     ipcMain.on(Events.WORKSPACE_READY, () => {
       if (this.resourceSystem.schemas) {
         this.mainWindow.webContents.send(
@@ -53,7 +57,15 @@ export default class ResourceClient {
     if (!path) {
       return;
     }
-    this.resourceSystem.loadFolder(path[0]);
+    ResourceClient.executeModal(
+      this.mainWindow,
+      `Loading folder: ${path}`,
+      'Loading resources',
+      () => {
+        this.resourceSystem.loadFolder(path[0]);
+      }
+    );
+
     this.mainWindow.webContents.send(
       Events.WORKSPACE_UPDATE_SCHEMAS,
       this.resourceSystem.schemas
@@ -61,10 +73,17 @@ export default class ResourceClient {
   }
 
   loadDefaultFolder() {
-    this.resourceSystem.loadFolder('./res');
-    this.mainWindow.webContents.send(
-      Events.WORKSPACE_UPDATE_SCHEMAS,
-      this.resourceSystem.schemas
+    ResourceClient.executeModal(
+      this.mainWindow,
+      'Loading default folder',
+      'Loading resources',
+      () => {
+        this.resourceSystem.loadFolder('./res');
+        this.mainWindow.webContents.send(
+          Events.WORKSPACE_UPDATE_SCHEMAS,
+          this.resourceSystem.schemas
+        );
+      }
     );
   }
 
@@ -103,6 +122,47 @@ export default class ResourceClient {
     this.progressBar = null;
   }
 
+  loadFromFile() {
+    const path = dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Resources', extensions: [Consts.EXTENSION_RESOURCE] }]
+    });
+
+    if (!path) {
+      return;
+    }
+
+    const size = path.length;
+    for (let i = 0; i < size; i += 1) {
+      const res = this.resourceSystem.loadResource(path[i], true);
+      if (res) {
+        this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, res);
+      }
+    }
+  }
+
+  loadExisting() {
+    this.mainWindow.webContents.send(
+      Events.DIALOG_LOAD_EXISTING_RESOURCE,
+      this.resourceSystem.index
+    );
+  }
+
+  addExistingResources(resources) {
+    resources.forEach(key => {
+      const resource = this.resourceSystem.resources[key];
+      if (!resource) {
+        log.error(`Unable to find resource with id ${key}`);
+        return;
+      }
+
+      this.mainWindow.webContents.send(
+        Events.WORKSPACE_LOAD_RESOURCE,
+        resource
+      );
+    });
+  }
+
   createResourceOfType(type) {
     log.info(`Creating new resource of type: ${type}`);
 
@@ -127,5 +187,24 @@ export default class ResourceClient {
 
     log.silly(`New resource created: ${JSON.stringify(created)}`);
     this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, created);
+  }
+
+  static executeModal(mainWindow, text, detail, action) {
+    const progressBar = new ProgressBar({
+      text,
+      detail,
+      browserWindow: {
+        parent: mainWindow
+      }
+    });
+
+    try {
+      action();
+    } catch (e) {
+      log.error(e);
+      dialog.showErrorBox('Something went wrong', e);
+    }
+
+    progressBar.close();
   }
 }

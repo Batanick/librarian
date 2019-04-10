@@ -2,8 +2,9 @@
 import React, { Component } from 'react';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
-import DialogHelper from '../components/DialogHelper';
 import Workspace from '../components/Workspace';
+import ResourceTypeSelect from '../components/ResourceTypeSelect';
+import ExistingResourceSelect from '../components/ExistingResourceSelect';
 
 type Props = {};
 
@@ -12,7 +13,8 @@ class Root extends Component<Props> {
     return (
       <div>
         <Workspace connectDropTarget={null} />
-        <DialogHelper />
+        <ResourceTypeSelect />
+        <ExistingResourceSelect />
       </div>
     );
   }

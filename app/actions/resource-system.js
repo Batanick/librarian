@@ -1,9 +1,9 @@
 import log from 'electron-log';
 
 import * as Consts from '../constants/constants';
+import * as Utils from './utils/file-utils';
 
-const uuidv4 = require('uuid/v4');
-const path = require('path');
+const uuid = require('uuid/v4');
 const fs = require('fs');
 
 const { dialog } = require('electron');
@@ -15,14 +15,18 @@ export default class ResourceSystem {
 
   rootDirPath: null;
 
+  index: null;
+
   loadFolder(folderPath) {
     this.schemas = {};
     this.resources = {};
+    this.index = {};
+    this.rootDirPath = folderPath;
 
     log.info(`Loading resource folder: ${folderPath}`);
 
     this.loadSchemas(`${folderPath}\\types`);
-    this.rootDirPath = folderPath;
+    this.loadResources(folderPath);
   }
 
   loadSchemas(schemaPath) {
@@ -66,10 +70,62 @@ export default class ResourceSystem {
     return true;
   }
 
+  loadResources(folderPath) {
+    const files = Utils.searchDir(folderPath, fileName =>
+      fileName.endsWith(Consts.EXTENSION_RESOURCE)
+    );
+
+    const size = files.length;
+    for (let i = 0; i < size; i += 1) {
+      const res = this.loadResource(files[i]);
+      if (!res) {
+        log.error(`Unable to load resource file: ${res}`);
+      }
+    }
+  }
+
+  static loadResourceFromFile(resourcePath) {
+    try {
+      const content = fs.readFileSync(resourcePath, 'utf-8');
+      const res = JSON.parse(content);
+
+      res[Consts.FIELD_NAME_PATH] = resourcePath;
+      res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
+
+      return res;
+    } catch (e) {
+      log.error(e);
+      dialog.showErrorBox(`Unable to load resource: ${resourcePath}`, e);
+      return null;
+    }
+  }
+
+  loadResource(resourcePath, ignoreDuplicates) {
+    const res = ResourceSystem.loadResourceFromFile(resourcePath);
+    if (!res) {
+      return null;
+    }
+
+    const id = res[Consts.FIELD_NAME_ID];
+    const type = res[Consts.FIELD_NAME_TYPE];
+
+    if (!ignoreDuplicates && this.resources[id]) {
+      log.error(`Duplicate id: ${id}`);
+      return null;
+    }
+
+    if (!this.schemas[type]) {
+      log.error(`Unknown resource type: ${type}, resource: ${resourcePath}`);
+      return null;
+    }
+
+    this.register(res);
+    return res;
+  }
+
   createResource(type, resourcePath) {
     const res = {};
-    const resId = uuidv4();
-    res[Consts.FIELD_NAME_ID] = resId;
+    res[Consts.FIELD_NAME_ID] = uuid();
     res[Consts.FIELD_NAME_TYPE] = type;
 
     const content = JSON.stringify(res, null, 4);
@@ -80,14 +136,10 @@ export default class ResourceSystem {
       return null;
     }
 
-    res[Consts.FIELD_NAME_NAME] = path
-      .basename(resourcePath)
-      .split('.')
-      .slice(0, -1)
-      .join('.');
+    res[Consts.FIELD_NAME_NAME] = Utils.extractFileName(resourcePath);
     res[Consts.FIELD_NAME_PATH] = resourcePath;
 
-    this.resources[resId] = res;
+    this.register(res);
     return res;
   }
 
@@ -114,7 +166,19 @@ export default class ResourceSystem {
       return null;
     }
 
-    this.resources[resId] = res;
+    this.register(res);
     return res;
+  }
+
+  register(res) {
+    const resId = res[Consts.FIELD_NAME_ID];
+
+    const indexRecord = {};
+    indexRecord[Consts.FIELD_NAME_PATH] = res[Consts.FIELD_NAME_PATH];
+    indexRecord[Consts.FIELD_NAME_NAME] = res[Consts.FIELD_NAME_NAME];
+    indexRecord[Consts.FIELD_NAME_TYPE] = res[Consts.FIELD_NAME_TYPE];
+
+    this.index[resId] = indexRecord;
+    this.resources[resId] = res;
   }
 }
