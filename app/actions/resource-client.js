@@ -25,6 +25,10 @@ export default class ResourceClient {
       this.createResourceOfType(arg);
     });
 
+    ipcMain.on(Events.DIALOG_SELECT_EXISTING_RESOURCE, (event, arg) => {
+      this.addExistingResources(arg);
+    });
+
     ipcMain.on(Events.WORKSPACE_READY, () => {
       if (this.resourceSystem.schemas) {
         this.mainWindow.webContents.send(
@@ -142,6 +146,21 @@ export default class ResourceClient {
       Events.DIALOG_LOAD_EXISTING_RESOURCE,
       this.resourceSystem.index
     );
+  }
+
+  addExistingResources(resources) {
+    resources.forEach(key => {
+      const resource = this.resourceSystem.resources[key];
+      if (!resource) {
+        log.error(`Unable to find resource with id ${key}`);
+        return;
+      }
+
+      this.mainWindow.webContents.send(
+        Events.WORKSPACE_LOAD_RESOURCE,
+        resource
+      );
+    });
   }
 
   createResourceOfType(type) {
