@@ -1,7 +1,4 @@
 {
-    "$id": "0aba07ca-c89a-4d0e-a843-6d46dd8fc993",
-    "$type": "SimpleSchema",
-    "age": "1234",
-    "bio": "dasdas",
-    "firstName": "qweqwe"
+    "$id": "fd343445-029d-4fb5-822a-1b0b58c8c484",
+    "$type": "SimpleSchema"
 }

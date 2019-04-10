@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -8,9 +8,9 @@ import update from 'immutability-helper';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
 
-// const log = require('electron-log');
+const log = require('electron-log');
 
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {};
 
@@ -22,6 +22,18 @@ export default class ExistingResourceSelect extends Component<Props> {
   tableRef: null;
 
   filterRef: null;
+
+  static isFiltered(filter, id, res) {
+    if (filter == null) {
+      return false;
+    }
+
+    if (id.toLowerCase().indexOf(filter) > -1) {
+      return false;
+    }
+
+    return !Object.values(res).some(v => v.toLowerCase().indexOf(filter) > -1);
+  }
 
   constructor(...args) {
     super(args);
@@ -37,6 +49,7 @@ export default class ExistingResourceSelect extends Component<Props> {
 
     this.filterTable = this.filterTable.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.addSingle = this.addSingle.bind(this);
   }
 
   componentDidMount() {
@@ -63,9 +76,17 @@ export default class ExistingResourceSelect extends Component<Props> {
     this.filterRef.current.focus();
   }
 
+  addAllSelected() {
+
+  }
+
+  addSingle(resId) {
+    log.silly(resId);
+  }
+
   filterTable() {
     const filter = this.filterRef.current.value.toLowerCase();
-    this.setState(prevState => update(prevState, { $merge: { filter } }));
+    this.setState(prevState => update(prevState, {$merge: {filter}}));
   }
 
   handleClose() {
@@ -77,8 +98,8 @@ export default class ExistingResourceSelect extends Component<Props> {
   }
 
   render() {
-    const { resources, dialogShow, filter } = this.state;
-
+    const {resources, dialogShow, filter} = this.state;
+    const addSingleHandler = this.addSingle;
     return (
       <div>
         <Modal show={dialogShow} onHide={this.handleClose} size="lg">
@@ -94,47 +115,45 @@ export default class ExistingResourceSelect extends Component<Props> {
               placeholder="Search.."
               onKeyUp={this.filterTable}
             />
-            <br />
+            <br/>
             <table className="table table-bordered table-striped table-sm">
               <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Id</th>
-                  <th>Path</th>
-                </tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Id</th>
+                <th>Path</th>
+                <th>Add</th>
+              </tr>
               </thead>
               <tbody ref={this.tableRef}>
-                {Object.keys(resources).map(key => {
-                  const res = resources[key];
+              {Object.keys(resources).map(key => {
+                const res = resources[key];
 
-                  let passFilter = filter == null;
-                  passFilter =
-                    passFilter || key.toLowerCase().indexOf(filter) > -1; // key
-                  passFilter =
-                    passFilter ||
-                    Object.values(res).some(
-                      v => v.toLowerCase().indexOf(filter) > -1
-                    ); // properties
-                  if (!passFilter) {
-                    return;
-                  }
+                if (ExistingResourceSelect.isFiltered(filter, key, res)) {
+                  return;
+                }
 
-                  return (
-                    <tr key={key}>
-                      <td>{res[Consts.FIELD_NAME_NAME]}</td>
-                      <td>{res[Consts.FIELD_NAME_TYPE]}</td>
-                      <td>{key}</td>
-                      <td>{res[Consts.FIELD_NAME_PATH]}</td>
-                    </tr>
-                  );
-                })}
+                const wrapper = () => {
+                  addSingleHandler(key);
+                };
+
+                return (
+                  <tr key={key}>
+                    <td>{res[Consts.FIELD_NAME_NAME]}</td>
+                    <td>{res[Consts.FIELD_NAME_TYPE]}</td>
+                    <td>{key}</td>
+                    <td>{res[Consts.FIELD_NAME_PATH]}</td>
+                    <td><Button className="btn btn-secondary btn-sm" onClick={wrapper}>→</Button></td>
+                  </tr>
+                );
+              })}
               </tbody>
             </table>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="primary" onClick={this.handleSubmit}>
-              Select
+            <Button variant="primary" onClick={this.addAllSelected()}>
+              Add all
             </Button>
           </Modal.Footer>
         </Modal>
