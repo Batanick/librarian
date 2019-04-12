@@ -115,8 +115,12 @@ class Workspace extends Component<Props> {
           type: 'SimpleSchema'
         }
       },
-      schemas: { SimpleSchema: defaultSchema }
+      schemas: { SimpleSchema: defaultSchema },
+      selected: {}
     };
+
+    this.resetSelected = this.resetSelected.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
   }
 
   componentDidMount() {
@@ -146,8 +150,35 @@ class Workspace extends Component<Props> {
 
     this.setState({
       resources: {},
-      schemas
+      schemas,
+      selected: {}
     });
+  }
+
+  addSelected(key, add) {
+    if (!add) {
+      this.resetSelected();
+    }
+
+    this.setState(prevState =>
+      update(prevState, {
+        selected: { [key]: { $set: true } }
+      })
+    );
+  }
+
+  resetSelected() {
+    this.setState(prevState =>
+      update(prevState, {
+        $set: { selected: {} }
+      })
+    );
+  }
+
+  handleKeyPress(e) {
+    if (e.key === 'Escape') {
+      this.resetSelected();
+    }
   }
 
   addResource(res) {
@@ -238,21 +269,34 @@ class Workspace extends Component<Props> {
 
   render() {
     const { connectDropTarget } = this.props;
-    const { resources, schemas } = this.state;
+    const { resources, schemas, selected } = this.state;
 
-    log.silly(schemas);
-    log.silly(resources);
+    // log.silly(schemas);
+    // log.silly(resources);
+    // log.silly(selected);
 
     return connectDropTarget(
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
-        <div id="workspace" style={Object.assign({}, styles)}>
+        <div
+          id="workspace"
+          style={Object.assign({}, styles)}
+          onClick={this.resetSelected}
+          onKeyDown={e => this.handleKeyPress(e)}
+          tabIndex="-1" /* required for proper KeyDown */
+          role="presentation"
+        >
           {Object.keys(resources).map(key => {
             const { left, top, value, type, dirty } = resources[key];
             const schema = schemas[type];
+            const isSelected = selected[key];
 
             const selfThis = this;
             const onChange = function changeWrapper(fieldId, fieldValue) {
               selfThis.onDataChange(key, fieldId, fieldValue);
+            };
+
+            const onSelect = function selectWrapper(add) {
+              selfThis.addSelected(key, add);
             };
 
             const name = value[Consts.FIELD_NAME_NAME];
@@ -272,7 +316,9 @@ class Workspace extends Component<Props> {
                   name={name}
                   dirty={dirty}
                   onChange={onChange}
+                  onSelect={onSelect}
                   resId={key}
+                  selected={isSelected}
                 />
               </Dragable>
             );

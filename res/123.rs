@@ -1,4 +1,6 @@
 {
     "$id": 715637,
-    "$type": "SimpleSchema"
+    "$type": "SimpleSchema",
+    "bio": "dsadasdsads",
+    "lastName": "dsadasdas"
 }

@@ -13,7 +13,9 @@ type Props = {
   dirty: PropTypes.bool,
   schema: PropTypes.obj,
   data: PropTypes.obj,
-  onChange: PropTypes.fun
+  onChange: PropTypes.fun,
+  onSelect: PropTypes.fun,
+  selected: PropTypes.bool
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -23,10 +25,22 @@ export default class ResourceForm extends Component<Props> {
     super(args);
   }
 
+  handleSelect(event) {
+    const { onSelect } = this.props;
+    event.stopPropagation();
+    onSelect(event.shiftKey);
+  }
+
   render() {
-    const { name, resId, dirty, schema, data, onChange } = this.props;
+    const { name, resId, dirty, schema, data, onChange, selected } = this.props;
     return (
-      <div className="card">
+      <div
+        className={selected ? 'card border-info' : 'card'}
+        onClick={evt => this.handleSelect(evt)}
+        onKeyDown={() => {}}
+        role="presentation"
+        tabIndex="-1"
+      >
         <div className="card-header">
           <h5>{dirty ? `${name}*` : name}</h5>
           <h6 className="card-subtitle text-muted">{resId}</h6>
