@@ -178,7 +178,35 @@ class Workspace extends Component<Props> {
   handleKeyPress(e) {
     if (e.key === 'Escape') {
       this.resetSelected();
+      return;
     }
+
+    if (e.key === 'Delete') {
+      this.removeSelected();
+    }
+  }
+
+  removeSelected() {
+    const { selected, resources } = this.state;
+
+    const newResources = {};
+    const keys = Object.keys(resources);
+
+    for (let i = 0; i < keys.length; i += 1) {
+      const key = keys[i];
+      if (!selected[key]) {
+        newResources[key] = resources[key];
+      }
+    }
+
+    this.setState(prevState =>
+      update(prevState, {
+        $set: {
+          resources: newResources,
+          selected: {}
+        }
+      })
+    );
   }
 
   addResource(res) {
