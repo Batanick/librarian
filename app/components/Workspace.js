@@ -169,6 +169,7 @@ class Workspace extends Component<Props> {
       left: 20,
       title: resId,
       value: res,
+      errors: {},
       type
     };
 
@@ -223,7 +224,9 @@ class Workspace extends Component<Props> {
     );
   }
 
-  onDataChange(resId, field, fieldValue) {
+  onDataChange(resId, field, fieldValue, errors) {
+    log.error(errors);
+
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -236,7 +239,8 @@ class Workspace extends Component<Props> {
         resources: {
           [resId]: {
             value: { $merge: { [field]: fieldValue } },
-            $merge: { dirty: true }
+            $merge: { dirty: true },
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
@@ -248,7 +252,7 @@ class Workspace extends Component<Props> {
     const { resources, schemas, selected } = this.state;
 
     // log.silly(schemas);
-    // log.silly(resources);
+    log.silly(resources);
     // log.silly(selected);
 
     return connectDropTarget(
@@ -267,8 +271,12 @@ class Workspace extends Component<Props> {
             const isSelected = selected[key];
 
             const selfThis = this;
-            const onChange = function changeWrapper(fieldId, fieldValue) {
-              selfThis.onDataChange(key, fieldId, fieldValue);
+            const onChange = function changeWrapper(
+              fieldId,
+              fieldValue,
+              errors
+            ) {
+              selfThis.onDataChange(key, fieldId, fieldValue, errors);
             };
 
             const onSelect = function selectWrapper(add) {

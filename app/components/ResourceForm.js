@@ -1,8 +1,6 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
-import update from 'immutability-helper';
 
 import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
@@ -20,7 +18,8 @@ type Props = {
   data: PropTypes.obj,
   onChange: PropTypes.fun,
   onSelect: PropTypes.fun,
-  selected: PropTypes.bool
+  selected: PropTypes.bool,
+  errors: PropTypes.obj
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -28,33 +27,17 @@ export default class ResourceForm extends Component<Props> {
 
   constructor(...args) {
     super(args);
-
-    this.state = {
-      errors: {}
-    }
   }
 
   handleSelect(event) {
-    const {onSelect} = this.props;
+    const { onSelect } = this.props;
     event.stopPropagation();
     onSelect(event.shiftKey);
   }
 
-  onFieldChange(field, fieldValue, errors) {
-    this.setState(prevState =>
-      update(prevState, {
-        errors: {[field]: {$set: errors}}
-      })
-    );
-  }
-
-  renderInput(key, fieldInfo, fieldData) {
-    const {onChange} = this.props;
-
-    const onChangeWrapper = (field, fieldValue, errors) => {
-      this.onFieldChange(field, fieldValue, errors);
-      onChange(field, fieldValue, errors);
-    };
+  renderInput(key, fieldInfo, fieldData, errors) {
+    const { onChange } = this.props;
+    const invalid = errors != null && errors.length > 0;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -63,7 +46,8 @@ export default class ResourceForm extends Component<Props> {
             id={key}
             defaultValue={fieldInfo.default}
             value={fieldData}
-            onChangeField={onChangeWrapper}
+            onChangeField={onChange}
+            invalid={invalid}
           />
         );
       case 'integer':
@@ -72,7 +56,7 @@ export default class ResourceForm extends Component<Props> {
             id={key}
             defaultValue={fieldInfo.default}
             value={fieldData}
-            onChangeField={onChangeWrapper}
+            onChangeField={onChange}
             isInt
           />
         );
@@ -82,7 +66,7 @@ export default class ResourceForm extends Component<Props> {
             id={key}
             defaultValue={fieldInfo.default}
             value={fieldData}
-            onChangeField={onChangeWrapper}
+            onChangeField={onChange}
           />
         );
       case 'boolean':
@@ -92,7 +76,7 @@ export default class ResourceForm extends Component<Props> {
             type="checkbox"
             defaultValue={fieldInfo.default}
             value={fieldData}
-            onChangeField={onChangeWrapper}
+            onChangeField={onChange}
           />
         );
 
@@ -101,34 +85,29 @@ export default class ResourceForm extends Component<Props> {
     }
   }
 
-  static renderErrors(errors) {
-    if (true) {
-      return (<div className="invalid-feedback">
-        lalala
-      </div>)
-    }
-
+  renderErrors() {
+    const { errors } = this.props;
     if (!errors || errors.length === 0) {
       return;
     }
 
-    return (<div className="invalid-feedback">
-      {errors.map((e, i) => {
-        return <h6 key={`error-${i}`}>{e}</h6>
-      })}
-    </div>);
+    return (
+      <div className="invalid-feedback">
+        {errors.map(e => (
+          <div>{e}</div>
+        ))}
+      </div>
+    );
   }
 
   render() {
-    const {name, resId, dirty, schema, data, selected} = this.props;
-    const {errors} = this.state;
+    const { name, resId, dirty, schema, data, selected, errors } = this.props;
 
     return (
       <div
         className={selected ? 'card border-info' : 'card'}
         onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {
-        }}
+        onKeyDown={() => {}}
         role="presentation"
         tabIndex="-1"
       >
@@ -138,29 +117,31 @@ export default class ResourceForm extends Component<Props> {
         </div>
 
         <div className="card-body">
-          <form noValidate>
-            {Object.keys(schema.properties).map(key => {
-              const fieldInfo = schema.properties[key];
-              const fieldData = data[key];
-              const fieldErrors = errors[key];
+          <div className="form-group">
+            <fieldset>
+              {Object.keys(schema.properties).map(key => {
+                const fieldInfo = schema.properties[key];
+                const fieldData = data[key];
+                const fieldErrors = errors ? errors[key] : null;
 
-              return (
-                <div className="form-group row mb-1 has-danger" key={key}>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                  <label
-                    htmlFor={key}
-                    className="w-25 col-form-label col-form-label-sm"
-                  >
-                    {fieldInfo.title}
-                  </label>
-                  <div className="w-75">
-                    {this.renderInput(key, fieldInfo, fieldData)}
+                return (
+                  <div className="form-group row mb-1 has-danger" key={key}>
+                    {/* eslint-disable-next-line jsx-a11y/label-has-for */}
+                    <label
+                      htmlFor={key}
+                      className="w-25 col-form-label col-form-label-sm"
+                    >
+                      {fieldInfo.title}
+                    </label>
+                    <div className="w-75">
+                      {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
+                    </div>
+                    {this.renderErrors()}
                   </div>
-                  {ResourceForm.renderErrors(fieldErrors)}
-                </div>
-              );
-            })}
-          </form>
+                );
+              })}
+            </fieldset>
+          </div>
         </div>
       </div>
     );
