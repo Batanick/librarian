@@ -58,64 +58,14 @@ const target = {
   }
 };
 
-const defaultSchema = {
-  $id: 'SimpleSchema',
-  type: 'object',
-  required: ['firstName', 'lastName'],
-  properties: {
-    firstName: {
-      type: 'string',
-      title: 'First name',
-      default: 'Chuck'
-    },
-    lastName: {
-      type: 'string',
-      title: 'Last name'
-    },
-    age: {
-      type: 'integer',
-      title: 'Age'
-    },
-    bio: {
-      type: 'string',
-      title: 'Bio'
-    },
-    password: {
-      type: 'string',
-      title: 'Password',
-      minLength: 3
-    },
-    telephone: {
-      type: 'string',
-      title: 'Telephone',
-      minLength: 10
-    }
-  }
-};
-
 class Workspace extends Component<Props> {
   props: Props;
 
   constructor(...args) {
     super(args);
     this.state = {
-      resources: {
-        ResourceId: {
-          top: 20,
-          left: 80,
-          title: 'Drag me around',
-          value: { age: 42 },
-          type: 'SimpleSchema'
-        },
-        ResourceId2: {
-          top: 50,
-          left: 130,
-          title: 'Drag me around',
-          value: { age: 43 },
-          type: 'SimpleSchema'
-        }
-      },
-      schemas: { SimpleSchema: defaultSchema },
+      resources: {},
+      schemas: {},
       selected: {}
     };
 
@@ -274,8 +224,6 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue) {
-    log.silly(resId, field, fieldValue);
-
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {

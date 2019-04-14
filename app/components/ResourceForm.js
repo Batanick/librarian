@@ -1,9 +1,14 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import InputField from './custom-inputs/InputField';
 
-// const log = require('electron-log');
+import update from 'immutability-helper';
+
+import StringField from './custom-inputs/StringField';
+import BooleanField from './custom-inputs/BooleanField';
+import NumberField from './custom-inputs/NumberField';
+
+const log = require('electron-log');
 
 // import './ResourceForm.css';
 
@@ -23,21 +28,88 @@ export default class ResourceForm extends Component<Props> {
 
   constructor(...args) {
     super(args);
+
+    this.state = {
+      errors: {}
+    }
   }
 
   handleSelect(event) {
-    const { onSelect } = this.props;
+    const {onSelect} = this.props;
     event.stopPropagation();
     onSelect(event.shiftKey);
   }
 
+  onFieldChange(field, fieldValue, errors) {
+    this.setState(prevState =>
+      update(prevState, {
+        errors: {[field]: {$set: errors}}
+      })
+    );
+  }
+
+  renderInput(key, fieldInfo, fieldData) {
+    const {onChange} = this.props;
+
+    const onChangeWrapper = (field, fieldValue, errors) => {
+      this.onFieldChange(field, fieldValue, errors);
+      onChange(field, fieldValue, errors);
+    };
+
+    switch (fieldInfo.type) {
+      case 'string':
+        return (
+          <StringField
+            id={key}
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChangeWrapper}
+          />
+        );
+      case 'integer':
+        return (
+          <NumberField
+            id={key}
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChangeWrapper}
+            isInt
+          />
+        );
+      case 'number':
+        return (
+          <NumberField
+            id={key}
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChangeWrapper}
+          />
+        );
+      case 'boolean':
+        return (
+          <BooleanField
+            id={key}
+            type="checkbox"
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChangeWrapper}
+          />
+        );
+
+      default:
+        log.error(`Unable to render field of type: ${fieldInfo.type}`);
+    }
+  }
+
   render() {
-    const { name, resId, dirty, schema, data, onChange, selected } = this.props;
+    const {name, resId, dirty, schema, data, selected} = this.props;
+
     return (
       <div
         className={selected ? 'card border-info' : 'card'}
         onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {}}
+        onKeyDown={() => {
+        }}
         role="presentation"
         tabIndex="-1"
       >
@@ -47,7 +119,7 @@ export default class ResourceForm extends Component<Props> {
         </div>
 
         <div className="card-body">
-          <form>
+          <form noValidate>
             {Object.keys(schema.properties).map(key => {
               const fieldInfo = schema.properties[key];
               const fieldData = data[key];
@@ -62,13 +134,7 @@ export default class ResourceForm extends Component<Props> {
                     {fieldInfo.title}
                   </label>
                   <div className="w-75">
-                    <InputField
-                      id={key}
-                      type="string"
-                      defaultValue={fieldInfo.default}
-                      value={fieldData}
-                      onChangeField={onChange}
-                    />
+                    {this.renderInput(key, fieldInfo, fieldData)}
                   </div>
                 </div>
               );
