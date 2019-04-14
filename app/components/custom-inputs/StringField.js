@@ -23,9 +23,14 @@ export default class StringField extends Component<Props> {
     return errors;
   }
 
-  update = e => {
+  componentDidMount() {
+    const { value } = this.props;
+    // triggering validation
+    this.update(value);
+  }
+
+  update = value => {
     const { id, onChangeField } = this.props;
-    const { value } = e.target;
 
     const errors = StringField.validate(value);
     onChangeField(id, value, errors);
@@ -46,7 +51,7 @@ export default class StringField extends Component<Props> {
         className={classes}
         placeholder={defaultValue}
         defaultValue={value}
-        onChange={this.update}
+        onChange={e => this.update(e.target.value)}
       />
     );
   }

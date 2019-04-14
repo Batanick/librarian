@@ -252,7 +252,7 @@ class Workspace extends Component<Props> {
     const { resources, schemas, selected } = this.state;
 
     // log.silly(schemas);
-    log.silly(resources);
+    // log.silly(resources);
     // log.silly(selected);
 
     return connectDropTarget(
