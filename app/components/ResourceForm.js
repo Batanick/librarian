@@ -101,8 +101,27 @@ export default class ResourceForm extends Component<Props> {
     }
   }
 
+  static renderErrors(errors) {
+    if (true) {
+      return (<div className="invalid-feedback">
+        lalala
+      </div>)
+    }
+
+    if (!errors || errors.length === 0) {
+      return;
+    }
+
+    return (<div className="invalid-feedback">
+      {errors.map((e, i) => {
+        return <h6 key={`error-${i}`}>{e}</h6>
+      })}
+    </div>);
+  }
+
   render() {
     const {name, resId, dirty, schema, data, selected} = this.props;
+    const {errors} = this.state;
 
     return (
       <div
@@ -123,9 +142,10 @@ export default class ResourceForm extends Component<Props> {
             {Object.keys(schema.properties).map(key => {
               const fieldInfo = schema.properties[key];
               const fieldData = data[key];
+              const fieldErrors = errors[key];
 
               return (
-                <div className="form-group row mb-1" key={key}>
+                <div className="form-group row mb-1 has-danger" key={key}>
                   {/* eslint-disable-next-line jsx-a11y/label-has-for */}
                   <label
                     htmlFor={key}
@@ -136,6 +156,7 @@ export default class ResourceForm extends Component<Props> {
                   <div className="w-75">
                     {this.renderInput(key, fieldInfo, fieldData)}
                   </div>
+                  {ResourceForm.renderErrors(fieldErrors)}
                 </div>
               );
             })}
