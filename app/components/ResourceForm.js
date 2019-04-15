@@ -2,6 +2,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import Card from 'react-bootstrap/Card';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+
 import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 import NumberField from './custom-inputs/NumberField';
@@ -85,65 +89,43 @@ export default class ResourceForm extends Component<Props> {
     }
   }
 
-  renderErrors() {
-    const { errors } = this.props;
-    if (!errors || errors.length === 0) {
-      return;
-    }
-
-    return (
-      <div className="invalid-feedback">
-        {errors.map(e => (
-          <div>{e}</div>
-        ))}
-      </div>
-    );
-  }
-
   render() {
     const { name, resId, dirty, schema, data, selected, errors } = this.props;
 
     return (
-      <div
-        className={selected ? 'card border-info' : 'card'}
+      <Card
+        border={selected ? 'info' : 'primary'}
         onClick={evt => this.handleSelect(evt)}
         onKeyDown={() => {}}
         role="presentation"
         tabIndex="-1"
       >
-        <div className="card-header">
+        <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>
           <h6 className="card-subtitle text-muted">{resId}</h6>
-        </div>
+        </Card.Header>
 
-        <div className="card-body">
-          <div className="form-group">
-            <fieldset>
-              {Object.keys(schema.properties).map(key => {
-                const fieldInfo = schema.properties[key];
-                const fieldData = data[key];
-                const fieldErrors = errors ? errors[key] : null;
+        <Card.Body className="card-body">
+          <Form>
+            {Object.keys(schema.properties).map(key => {
+              const fieldInfo = schema.properties[key];
+              const fieldData = data[key];
+              const fieldErrors = errors ? errors[key] : null;
 
-                return (
-                  <div className="form-group row mb-1 has-danger" key={key}>
-                    {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                    <label
-                      htmlFor={key}
-                      className="w-25 col-form-label col-form-label-sm"
-                    >
-                      {fieldInfo.title}
-                    </label>
-                    <div className="w-75">
-                      {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
-                    </div>
-                    {this.renderErrors()}
-                  </div>
-                );
-              })}
-            </fieldset>
-          </div>
-        </div>
-      </div>
+              return (
+                <Form.Row>
+                  <Form.Label column sm={4}>
+                    {fieldInfo.title}
+                  </Form.Label>
+                  <Col>
+                    {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
+                  </Col>
+                </Form.Row>
+              );
+            })}
+          </Form>
+        </Card.Body>
+      </Card>
     );
   }
 }

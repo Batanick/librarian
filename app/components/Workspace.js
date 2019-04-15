@@ -225,8 +225,6 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors) {
-    log.error(errors);
-
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -266,7 +264,7 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const { left, top, value, type, dirty } = resources[key];
+            const { left, top, value, type, dirty, errors } = resources[key];
             const schema = schemas[type];
             const isSelected = selected[key];
 
@@ -274,9 +272,9 @@ class Workspace extends Component<Props> {
             const onChange = function changeWrapper(
               fieldId,
               fieldValue,
-              errors
+              fieldErrors
             ) {
-              selfThis.onDataChange(key, fieldId, fieldValue, errors);
+              selfThis.onDataChange(key, fieldId, fieldValue, fieldErrors);
             };
 
             const onSelect = function selectWrapper(add) {
@@ -303,6 +301,7 @@ class Workspace extends Component<Props> {
                   onSelect={onSelect}
                   resId={key}
                   selected={isSelected}
+                  errors={errors}
                 />
               </Dragable>
             );
