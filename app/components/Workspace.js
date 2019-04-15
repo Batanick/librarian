@@ -170,6 +170,7 @@ class Workspace extends Component<Props> {
       title: resId,
       value: res,
       errors: {},
+      dirty: false,
       type
     };
 
@@ -224,7 +225,7 @@ class Workspace extends Component<Props> {
     );
   }
 
-  onDataChange(resId, field, fieldValue, errors) {
+  onDataChange(resId, field, fieldValue, errors, skipDirty) {
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -237,12 +238,24 @@ class Workspace extends Component<Props> {
         resources: {
           [resId]: {
             value: { $merge: { [field]: fieldValue } },
-            $merge: { dirty: true },
             errors: { $merge: { [field]: errors } }
           }
         }
       })
     );
+
+    log.silly(skipDirty);
+    if (!skipDirty) {
+      this.setState(prevState =>
+        update(prevState, {
+          resources: {
+            [resId]: {
+              $merge: { dirty: true }
+            }
+          }
+        })
+      );
+    }
   }
 
   render() {
@@ -272,9 +285,16 @@ class Workspace extends Component<Props> {
             const onChange = function changeWrapper(
               fieldId,
               fieldValue,
-              fieldErrors
+              fieldErrors,
+              skipDirty
             ) {
-              selfThis.onDataChange(key, fieldId, fieldValue, fieldErrors);
+              selfThis.onDataChange(
+                key,
+                fieldId,
+                fieldValue,
+                fieldErrors,
+                skipDirty
+              );
             };
 
             const onSelect = function selectWrapper(add) {

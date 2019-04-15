@@ -11,6 +11,7 @@ type Props = {
   id: PropTypes.string,
   defaultValue: PropTypes.string,
   value: PropTypes.string,
+  type: PropTypes.string,
   onChangeField: PropTypes.func,
   errors: PropTypes.array
 };
@@ -36,16 +37,17 @@ export default class StringField extends Component<Props> {
   }
 
   componentDidMount() {
-    const { value } = this.props;
+    const { value, id, onChangeField } = this.props;
     // triggering validation
-    this.update(value);
+    const errors = StringField.validate(value);
+    onChangeField(id, value, errors, true);
   }
 
   update = value => {
     const { id, onChangeField } = this.props;
 
     const errors = StringField.validate(value);
-    onChangeField(id, value, errors);
+    onChangeField(id, value, errors, false);
   };
 
   setShowErrorOverlay(show) {
@@ -68,11 +70,13 @@ export default class StringField extends Component<Props> {
     return (
       <Overlay target={target} show placement="right">
         <Tooltip id="error-tooltip">
-          {errors.map(e => (
-            <text>
+          {errors.map((e, i) => (
+            <span key={`error-text-${i}`}>
+              {' '}
+              {/* eslint-disable-line react/no-array-index-key */}
               {e}
               <br />
-            </text>
+            </span>
           ))}
         </Tooltip>
       </Overlay>
@@ -80,7 +84,7 @@ export default class StringField extends Component<Props> {
   }
 
   render() {
-    const { defaultValue, value, id, errors } = this.props;
+    const { defaultValue, value, id, errors, type } = this.props;
 
     let classes = 'form-control form-control-sm';
     const invalid = errors && errors.length > 0;
@@ -91,7 +95,7 @@ export default class StringField extends Component<Props> {
       <div>
         <input
           id={id}
-          type="string"
+          type={type}
           className={classes}
           placeholder={defaultValue}
           defaultValue={value}
