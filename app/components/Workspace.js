@@ -12,6 +12,7 @@ import Dragable from './Dragable';
 
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
+import SvgOverlay from './SvgOverlay';
 
 const log = require('electron-log');
 
@@ -326,6 +327,7 @@ class Workspace extends Component<Props> {
             );
           })}
         </div>
+        <SvgOverlay />
       </div>
     );
   }
