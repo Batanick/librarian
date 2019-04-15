@@ -1,11 +1,17 @@
 // @flow
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import InputField from './custom-inputs/InputField';
 
-// const log = require('electron-log');
+import Card from 'react-bootstrap/Card';
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
 
-// import './ResourceForm.css';
+import StringField from './custom-inputs/StringField';
+import BooleanField from './custom-inputs/BooleanField';
+
+import * as Validators from './custom-inputs/validators';
+
+const log = require('electron-log');
 
 type Props = {
   name: PropTypes.string,
@@ -15,7 +21,8 @@ type Props = {
   data: PropTypes.obj,
   onChange: PropTypes.fun,
   onSelect: PropTypes.fun,
-  selected: PropTypes.bool
+  selected: PropTypes.bool,
+  errors: PropTypes.obj
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -31,51 +38,98 @@ export default class ResourceForm extends Component<Props> {
     onSelect(event.shiftKey);
   }
 
+  renderInput(key, fieldInfo, fieldData, errors) {
+    const { onChange } = this.props;
+
+    switch (fieldInfo.type) {
+      case 'string':
+        return (
+          <StringField
+            id={key}
+            type="string"
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChange}
+            errors={errors}
+            dataValidators={[]}
+          />
+        );
+      case 'integer':
+        return (
+          <StringField
+            id={key}
+            type="number"
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChange}
+            errors={errors}
+            dataValidators={[Validators.IsInteger]}
+          />
+        );
+      case 'number':
+        return (
+          <StringField
+            id={key}
+            type="number"
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChange}
+            errors={errors}
+            dataValidators={[]}
+          />
+        );
+      case 'boolean':
+        return (
+          <BooleanField
+            id={key}
+            type="checkbox"
+            defaultValue={fieldInfo.default}
+            value={fieldData}
+            onChangeField={onChange}
+          />
+        );
+
+      default:
+        log.error(`Unable to render field of type: ${fieldInfo.type}`);
+    }
+  }
+
   render() {
-    const { name, resId, dirty, schema, data, onChange, selected } = this.props;
+    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+
     return (
-      <div
-        className={selected ? 'card border-info' : 'card'}
+      <Card
+        border={selected ? 'info' : 'primary'}
+        role="presentation"
         onClick={evt => this.handleSelect(evt)}
         onKeyDown={() => {}}
-        role="presentation"
-        tabIndex="-1"
       >
-        <div className="card-header">
+        <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>
           <h6 className="card-subtitle text-muted">{resId}</h6>
-        </div>
+        </Card.Header>
 
-        <div className="card-body">
-          <form>
+        <Card.Body className="card-body">
+          <Form>
             {Object.keys(schema.properties).map(key => {
               const fieldInfo = schema.properties[key];
               const fieldData = data[key];
+              const fieldErrors = errors ? errors[key] : null;
 
               return (
-                <div className="form-group row mb-1" key={key}>
-                  {/* eslint-disable-next-line jsx-a11y/label-has-for */}
-                  <label
-                    htmlFor={key}
-                    className="w-25 col-form-label col-form-label-sm"
-                  >
+                <Form.Row key={`input-row-${key}`}>
+                  <Form.Label key={`input-label-${key}`} column sm={4}>
                     {fieldInfo.title}
-                  </label>
-                  <div className="w-75">
-                    <InputField
-                      id={key}
-                      type="string"
-                      defaultValue={fieldInfo.default}
-                      value={fieldData}
-                      onChangeField={onChange}
-                    />
-                  </div>
-                </div>
+                  </Form.Label>
+                  <Col key={`input-col-${key}`}>
+                    {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
+                  </Col>
+                </Form.Row>
               );
             })}
-          </form>
-        </div>
-      </div>
+          </Form>
+        </Card.Body>
+      </Card>
     );
   }
 }

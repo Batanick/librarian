@@ -12,7 +12,7 @@
     "dev": "cross-env START_HOT=1 node -r @babel/register ./internals/scripts/CheckPortInUse.js && cross-env START_HOT=1 yarn start-renderer-dev",
     "flow": "flow",
     "flow-typed": "rimraf flow-typed/npm && flow-typed install --overwrite || true",
-    "lint": "cross-env NODE_ENV=development eslint --cache --format=pretty .",
+    "lint": "cross-env NODE_ENV=development eslint --format=pretty .",
     "lint-fix": "yarn --silent lint --fix; exit 0",
     "lint-styles": "stylelint --ignore-path .eslintignore '**/*.*(css|scss)' --syntax scss",
     "lint-styles-fix": "yarn --silent lint-styles --fix; exit 0",
@@ -37,7 +37,7 @@
   },
   "lint-staged": {
     "*.{js,jsx}": [
-      "cross-env NODE_ENV=development eslint --cache --format=pretty",
+      "cross-env NODE_ENV=development eslint --format=pretty",
       "prettier --ignore-path .eslintignore --single-quote --write",
       "git add"
     ],
@@ -265,6 +265,8 @@
     "electron-updater": "^3.2.3",
     "history": "^4.7.2",
     "immutability-helper": "^3.0.0",
+    "jquery": "^3.4.0",
+    "popper": "^1.0.1",
     "prop-types": "latest",
     "react": "16.8.0",
     "react-bootstrap": "^1.0.0-beta.6",

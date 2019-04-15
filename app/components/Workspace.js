@@ -58,64 +58,14 @@ const target = {
   }
 };
 
-const defaultSchema = {
-  $id: 'SimpleSchema',
-  type: 'object',
-  required: ['firstName', 'lastName'],
-  properties: {
-    firstName: {
-      type: 'string',
-      title: 'First name',
-      default: 'Chuck'
-    },
-    lastName: {
-      type: 'string',
-      title: 'Last name'
-    },
-    age: {
-      type: 'integer',
-      title: 'Age'
-    },
-    bio: {
-      type: 'string',
-      title: 'Bio'
-    },
-    password: {
-      type: 'string',
-      title: 'Password',
-      minLength: 3
-    },
-    telephone: {
-      type: 'string',
-      title: 'Telephone',
-      minLength: 10
-    }
-  }
-};
-
 class Workspace extends Component<Props> {
   props: Props;
 
   constructor(...args) {
     super(args);
     this.state = {
-      resources: {
-        ResourceId: {
-          top: 20,
-          left: 80,
-          title: 'Drag me around',
-          value: { age: 42 },
-          type: 'SimpleSchema'
-        },
-        ResourceId2: {
-          top: 50,
-          left: 130,
-          title: 'Drag me around',
-          value: { age: 43 },
-          type: 'SimpleSchema'
-        }
-      },
-      schemas: { SimpleSchema: defaultSchema },
+      resources: {},
+      schemas: {},
       selected: {}
     };
 
@@ -219,6 +169,8 @@ class Workspace extends Component<Props> {
       left: 20,
       title: resId,
       value: res,
+      errors: {},
+      dirty: false,
       type
     };
 
@@ -273,9 +225,7 @@ class Workspace extends Component<Props> {
     );
   }
 
-  onDataChange(resId, field, fieldValue) {
-    log.silly(resId, field, fieldValue);
-
+  onDataChange(resId, field, fieldValue, errors, skipDirty) {
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -288,11 +238,23 @@ class Workspace extends Component<Props> {
         resources: {
           [resId]: {
             value: { $merge: { [field]: fieldValue } },
-            $merge: { dirty: true }
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
     );
+
+    if (!skipDirty) {
+      this.setState(prevState =>
+        update(prevState, {
+          resources: {
+            [resId]: {
+              $merge: { dirty: true }
+            }
+          }
+        })
+      );
+    }
   }
 
   render() {
@@ -314,13 +276,24 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const { left, top, value, type, dirty } = resources[key];
+            const { left, top, value, type, dirty, errors } = resources[key];
             const schema = schemas[type];
             const isSelected = selected[key];
 
             const selfThis = this;
-            const onChange = function changeWrapper(fieldId, fieldValue) {
-              selfThis.onDataChange(key, fieldId, fieldValue);
+            const onChange = function changeWrapper(
+              fieldId,
+              fieldValue,
+              fieldErrors,
+              skipDirty
+            ) {
+              selfThis.onDataChange(
+                key,
+                fieldId,
+                fieldValue,
+                fieldErrors,
+                skipDirty
+              );
             };
 
             const onSelect = function selectWrapper(add) {
@@ -347,6 +320,7 @@ class Workspace extends Component<Props> {
                   onSelect={onSelect}
                   resId={key}
                   selected={isSelected}
+                  errors={errors}
                 />
               </Dragable>
             );

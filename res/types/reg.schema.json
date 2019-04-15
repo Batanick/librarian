@@ -1,5 +1,5 @@
 {
-  "$id" : "SimpleSchema",
+  "$id": "SimpleSchema",
   "title": "A registration form",
   "description": "A simple form example.",
   "type": "object",
@@ -8,7 +8,7 @@
     "firstName": {
       "type": "string",
       "title": "First name",
-      "default": "Chuck"
+      "default": "Chucccck"
     },
     "lastName": {
       "type": "string",
@@ -18,14 +18,17 @@
       "type": "integer",
       "title": "Age"
     },
+    "number": {
+      "type": "number",
+      "title": "Float"
+    },
     "bio": {
       "type": "string",
       "title": "Bio"
     },
-    "password": {
-      "type": "string",
-      "title": "Password",
-      "minLength": 3
+    "boolean_test": {
+      "type": "boolean",
+      "title": "Checkbox"
     },
     "telephone": {
       "type": "string",

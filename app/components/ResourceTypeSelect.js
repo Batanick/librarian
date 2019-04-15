@@ -26,9 +26,7 @@ export default class ResourceTypeSelect extends Component<Props> {
 
   componentDidMount() {
     const selfThis = this;
-    log.silly('2');
     ipcRenderer.on(Events.DIALOG_SELECT_SCHEMA_TYPE, (event, arg) => {
-      log.silly(arg);
       selfThis.showSchemaTypeSelection(arg);
     });
   }
@@ -45,7 +43,6 @@ export default class ResourceTypeSelect extends Component<Props> {
   }
 
   onTypeSelect(type) {
-    log.silly(`Selected:${type}`);
     this.onTypeSelectCancelled();
 
     if (type) {
