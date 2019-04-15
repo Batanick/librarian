@@ -71,9 +71,11 @@ export default class StringField extends Component<Props> {
       <Overlay target={target} show placement="right">
         <Tooltip id="error-tooltip">
           {errors.map((e, i) => (
-            <span key={`error-text-${i}`}>
-              {' '}
-              {/* eslint-disable-line react/no-array-index-key */}
+            <span
+              key={
+                `error-text-${i}` /* eslint-disable-line react/no-array-index-key */
+              }
+            >
               {e}
               <br />
             </span>
