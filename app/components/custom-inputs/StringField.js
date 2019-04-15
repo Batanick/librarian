@@ -13,20 +13,11 @@ type Props = {
   value: PropTypes.string,
   type: PropTypes.string,
   onChangeField: PropTypes.func,
-  errors: PropTypes.array
+  errors: PropTypes.array,
+  dataValidators: PropTypes.array
 };
 
 export default class StringField extends Component<Props> {
-  static validate(value) {
-    const errors = [];
-
-    if (!value || value === '') {
-      errors.push('Value cannot be empty');
-    }
-
-    return errors;
-  }
-
   constructor(...args) {
     super(...args);
 
@@ -39,14 +30,35 @@ export default class StringField extends Component<Props> {
   componentDidMount() {
     const { value, id, onChangeField } = this.props;
     // triggering validation
-    const errors = StringField.validate(value);
+    const errors = this.validate(value);
     onChangeField(id, value, errors, true);
+  }
+
+  validate(value) {
+    const { dataValidators } = this.props;
+    const errors = [];
+
+    if (dataValidators && dataValidators.length > 0) {
+      for (let i = 0; i < dataValidators.length; i += 1) {
+        const validator = dataValidators[i];
+        const error = validator(value);
+        if (error) {
+          errors.push(error);
+        }
+      }
+    }
+
+    if (!value || value === '') {
+      errors.push('Value cannot be empty');
+    }
+
+    return errors;
   }
 
   update = value => {
     const { id, onChangeField } = this.props;
 
-    const errors = StringField.validate(value);
+    const errors = this.validate(value);
     onChangeField(id, value, errors, false);
   };
 

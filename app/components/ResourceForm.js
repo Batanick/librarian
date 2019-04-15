@@ -9,6 +9,8 @@ import Col from 'react-bootstrap/Col';
 import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 
+import * as Validators from './custom-inputs/validators';
+
 const log = require('electron-log');
 
 type Props = {
@@ -49,6 +51,7 @@ export default class ResourceForm extends Component<Props> {
             value={fieldData}
             onChangeField={onChange}
             errors={errors}
+            dataValidators={[]}
           />
         );
       case 'integer':
@@ -60,6 +63,7 @@ export default class ResourceForm extends Component<Props> {
             value={fieldData}
             onChangeField={onChange}
             errors={errors}
+            dataValidators={[Validators.IsInteger]}
           />
         );
       case 'number':
@@ -71,6 +75,7 @@ export default class ResourceForm extends Component<Props> {
             value={fieldData}
             onChangeField={onChange}
             errors={errors}
+            dataValidators={[]}
           />
         );
       case 'boolean':
