@@ -244,7 +244,6 @@ class Workspace extends Component<Props> {
       })
     );
 
-    log.silly(skipDirty);
     if (!skipDirty) {
       this.setState(prevState =>
         update(prevState, {
