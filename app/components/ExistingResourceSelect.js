@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -10,7 +10,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {};
 
@@ -78,7 +78,7 @@ export default class ExistingResourceSelect extends Component<Props> {
   }
 
   addAllSelected() {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const filter = this.filterRef.current.value.toLowerCase();
     const result = [];
     Object.keys(resources).forEach(key => {
@@ -96,7 +96,7 @@ export default class ExistingResourceSelect extends Component<Props> {
   }
 
   addSingle(resId) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const res = resources[resId];
     if (!res) {
       log.error(`Unable to find resource with id: ${resId}`);
@@ -108,7 +108,7 @@ export default class ExistingResourceSelect extends Component<Props> {
 
   filterTable() {
     const filter = this.filterRef.current.value.toLowerCase();
-    this.setState(prevState => update(prevState, { $merge: { filter } }));
+    this.setState(prevState => update(prevState, {$merge: {filter}}));
   }
 
   handleClose() {
@@ -120,7 +120,7 @@ export default class ExistingResourceSelect extends Component<Props> {
   }
 
   render() {
-    const { resources, dialogShow, filter } = this.state;
+    const {resources, dialogShow, filter} = this.state;
     const addSingleHandler = this.addSingle;
     const addAllSelectedHandler = this.addAllSelected;
     return (
@@ -138,46 +138,46 @@ export default class ExistingResourceSelect extends Component<Props> {
               placeholder="Search.."
               onKeyUp={this.filterTable}
             />
-            <br />
+            <br/>
             <table className="table table-bordered table-striped table-sm">
               <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>Id</th>
-                  <th>Path</th>
-                  <th>Add</th>
-                </tr>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Id</th>
+                <th>Path</th>
+                <th>Add</th>
+              </tr>
               </thead>
               <tbody ref={this.tableRef}>
-                {Object.keys(resources).map(key => {
-                  const res = resources[key];
+              {Object.keys(resources).map(key => {
+                const res = resources[key];
 
-                  if (ExistingResourceSelect.isFiltered(filter, key, res)) {
-                    return;
-                  }
+                if (ExistingResourceSelect.isFiltered(filter, key, res)) {
+                  return;
+                }
 
-                  const wrapper = () => {
-                    addSingleHandler(key);
-                  };
+                const wrapper = () => {
+                  addSingleHandler(key);
+                };
 
-                  return (
-                    <tr key={key}>
-                      <td>{res[Consts.FIELD_NAME_NAME]}</td>
-                      <td>{res[Consts.FIELD_NAME_TYPE]}</td>
-                      <td>{key}</td>
-                      <td>{res[Consts.FIELD_NAME_PATH]}</td>
-                      <td>
-                        <Button
-                          className="btn btn-secondary btn-sm"
-                          onClick={wrapper}
-                        >
-                          →
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                return (
+                  <tr key={key}>
+                    <td>{res[Consts.FIELD_NAME_NAME]}</td>
+                    <td>{res[Consts.FIELD_NAME_TYPE]}</td>
+                    <td>{key}</td>
+                    <td>{res[Consts.FIELD_NAME_PATH]}</td>
+                    <td>
+                      <Button
+                        className="btn btn-secondary btn-sm"
+                        onClick={wrapper}
+                      >
+                        →
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
               </tbody>
             </table>
           </Modal.Body>

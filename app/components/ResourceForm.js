@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -9,6 +9,9 @@ import Col from 'react-bootstrap/Col';
 import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 import NumberField from './custom-inputs/NumberField';
+import OverlayTrigger from "react-bootstrap/OverlayTrigger";
+import Tooltip from "react-bootstrap/Tooltip";
+import Button from "react-bootstrap/Button";
 
 const log = require('electron-log');
 
@@ -34,13 +37,26 @@ export default class ResourceForm extends Component<Props> {
   }
 
   handleSelect(event) {
-    const { onSelect } = this.props;
+    const {onSelect} = this.props;
     event.stopPropagation();
     onSelect(event.shiftKey);
   }
 
+
   renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange } = this.props;
+    // if (errors == null || errors.length === 0) {
+    //   return this.renderSpecificInput(key, fieldInfo, fieldData, errors)
+    // }
+
+    return (
+      <div>
+        {this.renderSpecificInput(key, fieldInfo, fieldData, errors)}
+      </div>
+    )
+  }
+
+  renderSpecificInput(key, fieldInfo, fieldData, errors) {
+    const {onChange} = this.props;
     const invalid = errors != null && errors.length > 0;
 
     switch (fieldInfo.type) {
@@ -51,8 +67,7 @@ export default class ResourceForm extends Component<Props> {
             defaultValue={fieldInfo.default}
             value={fieldData}
             onChangeField={onChange}
-            invalid={invalid}
-          />
+            errors={errors}/>
         );
       case 'integer':
         return (
@@ -90,15 +105,16 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
-    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+    const {name, resId, dirty, schema, data, selected, errors} = this.props;
 
     return (
       <Card
         border={selected ? 'info' : 'primary'}
         onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {}}
+        onKeyDown={() => {
+        }}
         role="presentation"
-        tabIndex="-1"
+        // tabIndex="-1"
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>
@@ -113,11 +129,11 @@ export default class ResourceForm extends Component<Props> {
               const fieldErrors = errors ? errors[key] : null;
 
               return (
-                <Form.Row>
-                  <Form.Label column sm={4}>
+                <Form.Row key={`input-row-${key}`}>
+                  <Form.Label key={`input-label-${key}`} column sm={4}>
                     {fieldInfo.title}
                   </Form.Label>
-                  <Col>
+                  <Col key={`input-col-${key}`}>
                     {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
                   </Col>
                 </Form.Row>
