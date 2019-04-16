@@ -24,7 +24,7 @@ class Root extends Component<Props> {
       this.setState(prevState =>
         update(prevState, {
           links: {
-            $merge: {source, target}
+            $merge: {[source]: target}
           }
         })
       );

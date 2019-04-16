@@ -22,8 +22,24 @@ export default class ResourceRef extends Component<Props> {
     this.target = React.createRef();
   }
 
-  update = e => {
+  update = value => {
+    if (value == null || value === "") {
+      return;
+    }
+    const {overlayContext, onChangeField} = this.props;
+    overlayContext.registerLink(this.getId(), value);
+    onChangeField(id, value, [], false);
   };
+
+  componentDidMount() {
+    const {value} = this.props;
+    if (value == null || value === "") {
+      return;
+    }
+
+    const {overlayContext} = this.props;
+    overlayContext.registerLink(this.getId(), value);
+  }
 
   componentDidUpdate(prevProps) {
     const {overlayContext} = this.props;

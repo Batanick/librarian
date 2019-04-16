@@ -32,6 +32,15 @@ export default class ResourceForm extends Component<Props> {
 
   constructor(...args) {
     super(args);
+
+    this.target = React.createRef();
+  }
+
+  componentDidUpdate(prevProps) {
+    const {overlayContext, resId} = this.props;
+    const box = this.target.current.getBoundingClientRect();
+
+    overlayContext.updateCoords(resId, box.left, box.top + box.height / 2);
   }
 
   handleSelect(event) {
@@ -109,7 +118,7 @@ export default class ResourceForm extends Component<Props> {
     const {name, resId, dirty, schema, data, selected, errors} = this.props;
 
     return (
-      <Card
+      <Card ref={this.target}
         border={selected ? 'info' : 'primary'}
         role="presentation"
         onClick={evt => this.handleSelect(evt)}
