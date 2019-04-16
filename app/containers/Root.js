@@ -14,39 +14,49 @@ const log = require('electron-log');
 
 type Props = {};
 
-const dummyContext = {
-  registerLink: (sourceId, targetId) => {
-    log.silly(sourceId, targetId);
-  },
-};
-
 class Root extends Component<Props> {
   props: Props;
 
   constructor(...args) {
     super(args);
 
-    this.registerLink = (x, y) => {
+    this.registerLink = (source, target) => {
       this.setState(prevState =>
         update(prevState, {
-          $set: {value: x}
+          links: {
+            $merge: {source, target}
+          }
         })
       );
-      log.silly(`Called ${x}, ${y}`);
+    };
+
+    this.updateCoords = (id, x, y) => {
+      log.silly(id);
+      this.setState(prevState =>
+        update(prevState, {
+          coords: {[id]: {$set: {x: x, y: y}}}
+        })
+      );
     };
 
     // State also contains the updater function so it will
     // be passed down into the context provider
     this.state = {
       overlayContext: {
-        registerLink: this.registerLink
-      }
+        registerLink: this.registerLink,
+        updateCoords: this.updateCoords
+      },
+      coords: {},
+      links: {}
     };
   }
 
   render() {
-    const {overlayContext, value} = this.state;
-    log.silly("Rendering root: " + value);
+    const {overlayContext, links, coords} = this.state;
+
+    log.silly("Rendering root");
+    log.silly(this.state);
+
     return (
       <div>
         <OverlayContext.Provider value={overlayContext}>
@@ -54,7 +64,7 @@ class Root extends Component<Props> {
         </OverlayContext.Provider>
         <ResourceTypeSelect/>
         <ExistingResourceSelect/>
-        <SvgOverlay/>
+        <SvgOverlay coords={coords} links={links}/>
       </div>
     );
   }

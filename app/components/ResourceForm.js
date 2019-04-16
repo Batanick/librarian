@@ -41,7 +41,7 @@ export default class ResourceForm extends Component<Props> {
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const {onChange, overlayContext} = this.props;
+    const {onChange, overlayContext, resId} = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -96,7 +96,8 @@ export default class ResourceForm extends Component<Props> {
             id={key}
             value={fieldData}
             onChangeField={onChange}
-            overlayContext={overlayContext}/>
+            overlayContext={overlayContext}
+            resourceId={resId}/>
         );
 
       default:

@@ -9,6 +9,7 @@ const log = require('electron-log');
 
 type Props = {
   id: PropTypes.string,
+  resourceId: PropTypes.string,
   value: PropTypes.string,
   onChangeField: PropTypes.func,
   overlayContext: PropTypes.obj
@@ -26,7 +27,15 @@ export default class ResourceRef extends Component<Props> {
 
   componentDidUpdate(prevProps) {
     const {overlayContext} = this.props;
-    overlayContext.registerLink(42, 43);
+    const id = this.getId();
+    const box = this.target.current.getBoundingClientRect();
+
+    overlayContext.updateCoords(id, box.right, box.top + box.height / 2);
+  }
+
+  getId() {
+    const {id, resourceId} = this.props;
+    return `${resourceId}_${id}`;
   }
 
   render() {

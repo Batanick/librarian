@@ -1,10 +1,13 @@
 // @flow
-import React, { Component } from 'react';
-// import PropTypes from 'prop-types';
+import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 
 const log = require('electron-log');
 
-type Props = {};
+type Props = {
+  links: PropTypes.obj,
+  coords: PropTypes.obj
+};
 
 const styles = {
   position: 'absolute',
@@ -17,10 +20,14 @@ const styles = {
 
 export default class SvgOverlay extends Component<Props> {
   render() {
+    const {coords} = this.props;
     log.silly("rendering overlay");
     return (
       <svg id="svg-overlay" style={Object.assign({}, styles)}>
-        <circle cx="60" cy="60" r="50" color="white" />
+        {Object.keys(coords).map(key => {
+          let xy = coords[key];
+          return (<circle cx={xy.x} cy={xy.y} r="5" color="white"/>);
+        })}
       </svg>
     );
   }
