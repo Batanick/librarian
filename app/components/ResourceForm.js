@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -10,6 +10,7 @@ import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 
 import * as Validators from './custom-inputs/validators';
+import ResourceRef from "./custom-inputs/ResourceRef";
 
 const log = require('electron-log');
 
@@ -22,7 +23,8 @@ type Props = {
   onChange: PropTypes.fun,
   onSelect: PropTypes.fun,
   selected: PropTypes.bool,
-  errors: PropTypes.obj
+  errors: PropTypes.obj,
+  overlayContext: PropTypes.obj
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -33,13 +35,13 @@ export default class ResourceForm extends Component<Props> {
   }
 
   handleSelect(event) {
-    const { onSelect } = this.props;
+    const {onSelect} = this.props;
     event.stopPropagation();
     onSelect(event.shiftKey);
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange } = this.props;
+    const {onChange, overlayContext} = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -88,6 +90,14 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
           />
         );
+      case 'ref':
+        return (
+          <ResourceRef
+            id={key}
+            value={fieldData}
+            onChangeField={onChange}
+            overlayContext={overlayContext}/>
+        );
 
       default:
         log.error(`Unable to render field of type: ${fieldInfo.type}`);
@@ -95,14 +105,15 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
-    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+    const {name, resId, dirty, schema, data, selected, errors} = this.props;
 
     return (
       <Card
         border={selected ? 'info' : 'primary'}
         role="presentation"
         onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {}}
+        onKeyDown={() => {
+        }}
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>

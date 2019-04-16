@@ -2,6 +2,8 @@
 import React, { Component } from 'react';
 // import PropTypes from 'prop-types';
 
+const log = require('electron-log');
+
 type Props = {};
 
 const styles = {
@@ -15,8 +17,9 @@ const styles = {
 
 export default class SvgOverlay extends Component<Props> {
   render() {
+    log.silly("rendering overlay");
     return (
-      <svg style={Object.assign({}, styles)}>
+      <svg id="svg-overlay" style={Object.assign({}, styles)}>
         <circle cx="60" cy="60" r="50" color="white" />
       </svg>
     );

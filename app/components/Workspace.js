@@ -1,8 +1,8 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
@@ -12,11 +12,11 @@ import Dragable from './Dragable';
 
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
-import SvgOverlay from './SvgOverlay';
+import {OverlayContext} from '../components/OverlayContext'
 
 const log = require('electron-log');
 
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -40,7 +40,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
+    isOverCurrent: monitor.isOver({shallow: true}),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -113,7 +113,7 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: { [key]: { $set: true } }
+        selected: {[key]: {$set: true}}
       })
     );
   }
@@ -121,7 +121,7 @@ class Workspace extends Component<Props> {
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: { selected: {} }
+        $set: {selected: {}}
       })
     );
   }
@@ -138,7 +138,7 @@ class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const { selected, resources } = this.state;
+    const {selected, resources} = this.state;
 
     const newResources = {};
     const keys = Object.keys(resources);
@@ -177,13 +177,13 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: { [resId]: { $set: entry } }
+        resources: {[resId]: {$set: entry}}
       })
     );
   }
 
   saveDirty() {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -197,7 +197,7 @@ class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -205,7 +205,7 @@ class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: { dirty: false }
+                $merge: {dirty: false}
               }
             }
           })
@@ -219,7 +219,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: { left, top }
+            $merge: {left, top}
           }
         }
       })
@@ -227,7 +227,7 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -238,8 +238,8 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: { $merge: { [field]: fieldValue } },
-            errors: { $merge: { [field]: errors } }
+            value: {$merge: {[field]: fieldValue}},
+            errors: {$merge: {[field]: errors}}
           }
         }
       })
@@ -250,7 +250,7 @@ class Workspace extends Component<Props> {
         update(prevState, {
           resources: {
             [resId]: {
-              $merge: { dirty: true }
+              $merge: {dirty: true}
             }
           }
         })
@@ -259,9 +259,10 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
-    const { resources, schemas, selected } = this.state;
+    const {connectDropTarget} = this.props;
+    const {resources, schemas, selected} = this.state;
 
+    log.silly("rendering workspace");
     // log.silly(schemas);
     // log.silly(resources);
     // log.silly(selected);
@@ -277,7 +278,7 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const { left, top, value, type, dirty, errors } = resources[key];
+            const {left, top, value, type, dirty, errors} = resources[key];
             const schema = schemas[type];
             const isSelected = selected[key];
 
@@ -312,22 +313,26 @@ class Workspace extends Component<Props> {
                 connectDragSource=""
                 isDragging="false"
               >
-                <ResourceForm
-                  schema={schema}
-                  data={value}
-                  name={name}
-                  dirty={dirty}
-                  onChange={onChange}
-                  onSelect={onSelect}
-                  resId={key}
-                  selected={isSelected}
-                  errors={errors}
-                />
+                <OverlayContext.Consumer>
+                  {overlayContext => (
+                    <ResourceForm
+                      schema={schema}
+                      data={value}
+                      name={name}
+                      dirty={dirty}
+                      onChange={onChange}
+                      onSelect={onSelect}
+                      resId={key}
+                      selected={isSelected}
+                      errors={errors}
+                      overlayContext={overlayContext}/>
+                  )}
+                </OverlayContext.Consumer>
+
               </Dragable>
             );
           })}
         </div>
-        <SvgOverlay />
       </div>
     );
   }
