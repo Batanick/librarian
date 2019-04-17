@@ -24,7 +24,7 @@ type Props = {
   onSelect: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
-  overlayContext: PropTypes.obj
+  renderContext: PropTypes.obj
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -37,10 +37,11 @@ export default class ResourceForm extends Component<Props> {
   }
 
   componentDidUpdate(prevProps) {
-    const {overlayContext, resId} = this.props;
+    log.silly("Update");
+    const {renderContext, resId} = this.props;
     const box = this.target.current.getBoundingClientRect();
 
-    overlayContext.updateCoords(resId, box.left, box.top + box.height / 2);
+    renderContext.registerSize(resId, box.width, box.height);
   }
 
   handleSelect(event) {
@@ -118,12 +119,12 @@ export default class ResourceForm extends Component<Props> {
     const {name, resId, dirty, schema, data, selected, errors} = this.props;
 
     return (
-      <Card ref={this.target}
-        border={selected ? 'info' : 'primary'}
-        role="presentation"
-        onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {
-        }}
+      <Card ref={this.target} style={{borderWidth: '2px'}}
+            border={selected ? 'info' : 'primary'}
+            role="presentation"
+            onClick={evt => this.handleSelect(evt)}
+            onKeyDown={() => {
+            }}
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>

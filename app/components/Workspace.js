@@ -12,7 +12,6 @@ import Dragable from './Dragable';
 
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
-import {OverlayContext} from '../components/OverlayContext'
 
 const log = require('electron-log');
 
@@ -64,10 +63,13 @@ class Workspace extends Component<Props> {
 
   constructor(...args) {
     super(args);
+
+    const renderContext = this.buildRenderContext();
     this.state = {
       resources: {},
       schemas: {},
-      selected: {}
+      selected: {},
+      renderContext: renderContext
     };
 
     this.resetSelected = this.resetSelected.bind(this);
@@ -91,6 +93,26 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
+  resolvePosition(id) {
+    const {resources} = this.state;
+    const res = resources[id];
+    if (res == null) {
+      return null;
+    }
+  }
+
+  registerSize = (id, width, height) => {
+    this.setState(prevState =>
+      update(prevState, {
+        resources: {
+          [id]: {
+            $merge: {width, height}
+          }
+        }
+      })
+    );
+  };
+
   componentWillUnmount() {
     ipcRenderer.removeAllListeners(Events.WORKSPACE_LOAD_RESOURCE);
     ipcRenderer.removeAllListeners(Events.WORKSPACE_UPDATE_SCHEMAS);
@@ -99,11 +121,21 @@ class Workspace extends Component<Props> {
   resetWorkspace(schemas) {
     log.info(`Loading schemas: ${Object.keys(schemas)}`);
 
+    const renderContext = this.buildRenderContext();
     this.setState({
       resources: {},
       schemas,
-      selected: {}
+      selected: {},
+      renderContext: renderContext
     });
+  }
+
+  buildRenderContext() {
+    const context = {
+      registerSize: this.registerSize
+    };
+
+    return context;
   }
 
   addSelected(key, add) {
@@ -260,7 +292,7 @@ class Workspace extends Component<Props> {
 
   render() {
     const {connectDropTarget} = this.props;
-    const {resources, schemas, selected} = this.state;
+    const {resources, schemas, selected, renderContext} = this.state;
 
     log.silly("rendering workspace");
     // log.silly(schemas);
@@ -300,7 +332,7 @@ class Workspace extends Component<Props> {
 
             const onSelect = function selectWrapper(add) {
               selfThis.addSelected(key, add);
-            };
+           };
 
             const name = value[Consts.FIELD_NAME_NAME];
 
@@ -313,21 +345,17 @@ class Workspace extends Component<Props> {
                 connectDragSource=""
                 isDragging="false"
               >
-                <OverlayContext.Consumer>
-                  {overlayContext => (
-                    <ResourceForm
-                      schema={schema}
-                      data={value}
-                      name={name}
-                      dirty={dirty}
-                      onChange={onChange}
-                      onSelect={onSelect}
-                      resId={key}
-                      selected={isSelected}
-                      errors={errors}
-                      overlayContext={overlayContext}/>
-                  )}
-                </OverlayContext.Consumer>
+                <ResourceForm
+                  schema={schema}
+                  data={value}
+                  name={name}
+                  dirty={dirty}
+                  onChange={onChange}
+                  onSelect={onSelect}
+                  resId={key}
+                  selected={isSelected}
+                  errors={errors}
+                  renderContext={renderContext}/>
 
               </Dragable>
             );

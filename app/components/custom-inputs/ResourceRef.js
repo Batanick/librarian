@@ -2,8 +2,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import {OverlayContext} from '../OverlayContext';
-
 const log = require('electron-log');
 
 
@@ -12,7 +10,6 @@ type Props = {
   resourceId: PropTypes.string,
   value: PropTypes.string,
   onChangeField: PropTypes.func,
-  overlayContext: PropTypes.obj
 };
 
 export default class ResourceRef extends Component<Props> {
@@ -26,28 +23,10 @@ export default class ResourceRef extends Component<Props> {
     if (value == null || value === "") {
       return;
     }
-    const {overlayContext, onChangeField} = this.props;
-    overlayContext.registerLink(this.getId(), value);
-    onChangeField(id, value, [], false);
+    // const {overlayContext, onChangeField} = this.props;
+    // overlayContext.registerLink(this.getId(), value);
+    // onChangeField(id, value, [], false);
   };
-
-  componentDidMount() {
-    const {value} = this.props;
-    if (value == null || value === "") {
-      return;
-    }
-
-    const {overlayContext} = this.props;
-    overlayContext.registerLink(this.getId(), value);
-  }
-
-  componentDidUpdate(prevProps) {
-    const {overlayContext} = this.props;
-    const id = this.getId();
-    const box = this.target.current.getBoundingClientRect();
-
-    overlayContext.updateCoords(id, box.right, box.top + box.height / 2);
-  }
 
   getId() {
     const {id, resourceId} = this.props;
