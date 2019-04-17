@@ -36,8 +36,8 @@ export default class ResourceForm extends Component<Props> {
     this.target = React.createRef();
   }
 
-  componentDidUpdate(prevProps) {
-    log.silly("Update");
+  componentDidMount(): void {
+    log.silly("Mount");
     const {renderContext, resId} = this.props;
     const box = this.target.current.getBoundingClientRect();
 
@@ -117,7 +117,7 @@ export default class ResourceForm extends Component<Props> {
 
   render() {
     const {name, resId, dirty, schema, data, selected, errors} = this.props;
-
+    log.silly(`Rendering: ${resId}`);
     return (
       <Card ref={this.target} style={{borderWidth: '2px'}}
             border={selected ? 'info' : 'primary'}

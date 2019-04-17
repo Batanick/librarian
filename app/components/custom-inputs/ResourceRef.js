@@ -2,6 +2,9 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
+import * as Consts from '../../constants/constants';
+import SvgConnector from "./SvgConnector";
+
 const log = require('electron-log');
 
 
@@ -12,6 +15,20 @@ type Props = {
   onChangeField: PropTypes.func,
 };
 
+const overlayStyles = {
+  position: 'absolute',
+  width: Consts.WORKSPACE_SIZE,
+  height: Consts.WORKSPACE_SIZE,
+  pointerEvents: 'none',
+  left: 0,
+  top: 0,
+  zIndex: 2
+};
+
+const svgStyles = {
+  pointerEvents: 'auto',
+};
+
 export default class ResourceRef extends Component<Props> {
   constructor(...args) {
     super(...args);
@@ -20,9 +37,9 @@ export default class ResourceRef extends Component<Props> {
   }
 
   update = value => {
-    if (value == null || value === "") {
-      return;
-    }
+    // if (value == null || value === "") {
+    //   return;
+    // }
     // const {overlayContext, onChangeField} = this.props;
     // overlayContext.registerLink(this.getId(), value);
     // onChangeField(id, value, [], false);
@@ -36,14 +53,17 @@ export default class ResourceRef extends Component<Props> {
   render() {
     const {value, id} = this.props;
 
-    return (
-      <input ref={this.target}
-             id={id}
-             type="checkbox"
-             className="form-control form-control-sm"
-             checked={value === 'true'}
-             onChange={this.update}
-      />
+    return (<div>
+        <SvgConnector/>
+        <input ref={this.target}
+               id={id}
+               type="checkbox"
+               className="form-control form-control-sm"
+               checked={value === 'true'}
+               onChange={this.update}
+        />
+
+      </div>
     );
   }
 }

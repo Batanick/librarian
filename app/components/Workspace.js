@@ -23,8 +23,8 @@ type Props = {
 
 const styles = {
   position: 'relative',
-  width: 5000,
-  height: 5000
+  width: Consts.WORKSPACE_SIZE,
+  height: Consts.WORKSPACE_SIZE
 };
 
 const scrollableStyles = {

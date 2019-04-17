@@ -5,3 +5,5 @@ export const FIELD_NAME_NAME = '$name';
 
 export const EXTENSION_SCHEMA = 'schema.json';
 export const EXTENSION_RESOURCE = 'rs';
+
+export const WORKSPACE_SIZE = 5000;
