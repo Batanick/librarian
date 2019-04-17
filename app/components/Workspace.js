@@ -12,6 +12,7 @@ import Dragable from './Dragable';
 
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
+import Card from "react-bootstrap/Card";
 
 const log = require('electron-log');
 
@@ -309,7 +310,7 @@ class Workspace extends Component<Props> {
           tabIndex="-1" /* required for proper KeyDown */
           role="presentation"
         >
-          {Object.keys(resources).map(key => {
+          <div>{Object.keys(resources).map(key => {
             const {left, top, value, type, dirty, errors} = resources[key];
             const schema = schemas[type];
             const isSelected = selected[key];
@@ -332,7 +333,7 @@ class Workspace extends Component<Props> {
 
             const onSelect = function selectWrapper(add) {
               selfThis.addSelected(key, add);
-           };
+            };
 
             const name = value[Consts.FIELD_NAME_NAME];
 
@@ -359,10 +360,24 @@ class Workspace extends Component<Props> {
 
               </Dragable>
             );
-          })}
+          })
+
+          }
+          </div>
+          <div id="debug-topology">{this.renderDebugTopology(resources)}</div>
         </div>
       </div>
     );
+  }
+
+  renderDebugTopology(resources) {
+    return (<svg style={Object.assign({}, styles)}>{
+      Object.keys(resources).map(key => {
+        const {left, top, width, height} = resources[key];
+        log.silly(`${left}, ${top}, ${width}, ${height}`);
+        return (<path style={{zIndex: 5}} key={`debug-${key}`} d={`M ${left} ${top} L ${left + width} ${top + height}`} stroke="red" strokeWidth={1} color="red"/>)
+      })}
+    </svg>);
   }
 }
 
