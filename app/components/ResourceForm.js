@@ -21,7 +21,6 @@ type Props = {
   schema: PropTypes.obj,
   data: PropTypes.obj,
   onChange: PropTypes.fun,
-  onSelect: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
   renderContext: PropTypes.obj
@@ -37,21 +36,14 @@ export default class ResourceForm extends Component<Props> {
   }
 
   componentDidMount(): void {
-    log.silly("Mount");
     const {renderContext, resId} = this.props;
     const box = this.target.current.getBoundingClientRect();
 
     renderContext.registerSize(resId, box.width, box.height);
   }
 
-  handleSelect(event) {
-    const {onSelect} = this.props;
-    event.stopPropagation();
-    onSelect(event.shiftKey);
-  }
-
   renderInput(key, fieldInfo, fieldData, errors) {
-    const {onChange, overlayContext, resId} = this.props;
+    const {onChange, renderContext, resId} = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -106,8 +98,8 @@ export default class ResourceForm extends Component<Props> {
             id={key}
             value={fieldData}
             onChangeField={onChange}
-            overlayContext={overlayContext}
-            resourceId={resId}/>
+            resourceId={resId}
+            renderingContext={renderContext}/>
         );
 
       default:
@@ -120,11 +112,8 @@ export default class ResourceForm extends Component<Props> {
     log.silly(`Rendering: ${resId}`);
     return (
       <Card ref={this.target} style={{borderWidth: '2px'}}
-            border={selected ? 'info' : 'primary'}
+            border={selected ? 'warning' : 'info'}
             role="presentation"
-            onClick={evt => this.handleSelect(evt)}
-            onKeyDown={() => {
-            }}
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>

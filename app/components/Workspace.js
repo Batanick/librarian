@@ -1,8 +1,8 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
+import {DropTarget} from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
@@ -15,7 +15,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const { ipcRenderer } = window.require('electron');
+const {ipcRenderer} = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -39,7 +39,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
+    isOverCurrent: monitor.isOver({shallow: true}),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -71,9 +71,6 @@ class Workspace extends Component<Props> {
       selected: {},
       renderContext
     };
-
-    this.resetSelected = this.resetSelected.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
   }
 
   componentDidMount() {
@@ -103,19 +100,33 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: { width, height }
+            $merge: {width, height}
           }
         }
       })
     );
   };
 
-  resolvePosition(id) {
-    const { resources } = this.state;
+  getPosition(id) {
+    const {resources} = this.state;
     const res = resources[id];
     if (res == null) {
       return null;
     }
+  }
+
+  findResourceAt(x, y) {
+    const {resources} = this.state;
+    const ids = Object.keys(resources);
+    for (let i = 0; i < ids.length; i += 1) {
+      const key = ids[i];
+      const {left, top, width, height} = resources[key];
+      if (x > left && x < (left + width) && y > top && y < (top + height)) {
+        return key;
+      }
+    }
+
+    return null;
   }
 
   resetWorkspace(schemas) {
@@ -145,15 +156,24 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: { [key]: { $set: true } }
+        selected: {[key]: {$set: true}}
       })
     );
   }
 
+  handleClick = (event) => {
+    const resId = this.findResourceAt(event.clientX, event.clientY);
+    if (resId == null) {
+      this.resetSelected();
+    }
+
+    this.addSelected(resId, event.shiftKey);
+  };
+
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: { selected: {} }
+        $set: {selected: {}}
       })
     );
   }
@@ -175,7 +195,7 @@ class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const { selected, resources } = this.state;
+    const {selected, resources} = this.state;
 
     const newResources = {};
     const keys = Object.keys(resources);
@@ -214,13 +234,13 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: { [resId]: { $set: entry } }
+        resources: {[resId]: {$set: entry}}
       })
     );
   }
 
   saveDirty() {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -234,7 +254,7 @@ class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -242,7 +262,7 @@ class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: { dirty: false }
+                $merge: {dirty: false}
               }
             }
           })
@@ -256,7 +276,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: { left, top }
+            $merge: {left, top}
           }
         }
       })
@@ -264,7 +284,7 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const { resources } = this.state;
+    const {resources} = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -275,8 +295,8 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: { $merge: { [field]: fieldValue } },
-            errors: { $merge: { [field]: errors } }
+            value: {$merge: {[field]: fieldValue}},
+            errors: {$merge: {[field]: errors}}
           }
         }
       })
@@ -287,7 +307,7 @@ class Workspace extends Component<Props> {
         update(prevState, {
           resources: {
             [resId]: {
-              $merge: { dirty: true }
+              $merge: {dirty: true}
             }
           }
         })
@@ -296,16 +316,16 @@ class Workspace extends Component<Props> {
   }
 
   toggleDebugGeometry() {
-    const { debugGeometry } = this.state;
+    const {debugGeometry} = this.state;
     this.setState(prevState =>
       update(prevState, {
-        debugGeometry: { $set: !debugGeometry }
+        debugGeometry: {$set: !debugGeometry}
       })
     );
   }
 
   renderDebugTopology(resources) {
-    const { debugGeometry } = this.state;
+    const {debugGeometry} = this.state;
     if (!debugGeometry) {
       return null;
     }
@@ -313,11 +333,10 @@ class Workspace extends Component<Props> {
     return (
       <svg style={Object.assign({}, styles)}>
         {Object.keys(resources).map(key => {
-          const { left, top, width, height } = resources[key];
-          log.silly(`${left}, ${top}, ${width}, ${height}`);
+          const {left, top, width, height} = resources[key];
           return (
             <path
-              style={{ zIndex: 5 }}
+              style={{zIndex: 5}}
               key={`debug-${key}`}
               d={`M ${left} ${top} L ${left + width} ${top + height}`}
               stroke="red"
@@ -331,8 +350,8 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
-    const { resources, schemas, selected, renderContext } = this.state;
+    const {connectDropTarget} = this.props;
+    const {resources, schemas, selected, renderContext} = this.state;
 
     log.silly('rendering workspace');
     // log.silly(schemas);
@@ -344,14 +363,14 @@ class Workspace extends Component<Props> {
         <div
           id="workspace"
           style={Object.assign({}, styles)}
-          onClick={this.resetSelected}
-          onKeyDown={e => this.handleKeyPress(e)}
+          onClick={(e) => this.handleClick(e)}
+          onKeyDown={(e) => this.handleKeyPress(e)}
           tabIndex="-1" /* required for proper KeyDown */
           role="presentation"
         >
           <div>
             {Object.keys(resources).map(key => {
-              const { left, top, value, type, dirty, errors } = resources[key];
+              const {left, top, value, type, dirty, errors} = resources[key];
               const schema = schemas[type];
               const isSelected = selected[key];
 
@@ -371,10 +390,6 @@ class Workspace extends Component<Props> {
                 );
               };
 
-              const onSelect = function selectWrapper(add) {
-                selfThis.addSelected(key, add);
-              };
-
               const name = value[Consts.FIELD_NAME_NAME];
 
               return (
@@ -392,7 +407,6 @@ class Workspace extends Component<Props> {
                     name={name}
                     dirty={dirty}
                     onChange={onChange}
-                    onSelect={onSelect}
                     resId={key}
                     selected={isSelected}
                     errors={errors}

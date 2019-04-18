@@ -13,6 +13,7 @@ type Props = {
   resourceId: PropTypes.string,
   value: PropTypes.string,
   onChangeField: PropTypes.func,
+  renderingContext: PropTypes.obj
 };
 
 const overlayStyles = {
