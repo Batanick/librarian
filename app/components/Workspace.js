@@ -1,8 +1,8 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 
 // noinspection ES6CheckImport
-import {DropTarget} from 'react-dnd';
+import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
@@ -12,11 +12,10 @@ import Dragable from './Dragable';
 
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
-import Card from "react-bootstrap/Card";
 
 const log = require('electron-log');
 
-const {ipcRenderer} = window.require('electron');
+const { ipcRenderer } = window.require('electron');
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -40,7 +39,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({shallow: true}),
+    isOverCurrent: monitor.isOver({ shallow: true }),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -70,7 +69,7 @@ class Workspace extends Component<Props> {
       resources: {},
       schemas: {},
       selected: {},
-      renderContext: renderContext
+      renderContext
     };
 
     this.resetSelected = this.resetSelected.bind(this);
@@ -94,12 +93,9 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.WORKSPACE_READY);
   }
 
-  resolvePosition(id) {
-    const {resources} = this.state;
-    const res = resources[id];
-    if (res == null) {
-      return null;
-    }
+  componentWillUnmount() {
+    ipcRenderer.removeAllListeners(Events.WORKSPACE_LOAD_RESOURCE);
+    ipcRenderer.removeAllListeners(Events.WORKSPACE_UPDATE_SCHEMAS);
   }
 
   registerSize = (id, width, height) => {
@@ -107,16 +103,19 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {width, height}
+            $merge: { width, height }
           }
         }
       })
     );
   };
 
-  componentWillUnmount() {
-    ipcRenderer.removeAllListeners(Events.WORKSPACE_LOAD_RESOURCE);
-    ipcRenderer.removeAllListeners(Events.WORKSPACE_UPDATE_SCHEMAS);
+  resolvePosition(id) {
+    const { resources } = this.state;
+    const res = resources[id];
+    if (res == null) {
+      return null;
+    }
   }
 
   resetWorkspace(schemas) {
@@ -127,7 +126,7 @@ class Workspace extends Component<Props> {
       resources: {},
       schemas,
       selected: {},
-      renderContext: renderContext
+      renderContext
     });
   }
 
@@ -146,7 +145,7 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: {[key]: {$set: true}}
+        selected: { [key]: { $set: true } }
       })
     );
   }
@@ -154,7 +153,7 @@ class Workspace extends Component<Props> {
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: {selected: {}}
+        $set: { selected: {} }
       })
     );
   }
@@ -167,11 +166,16 @@ class Workspace extends Component<Props> {
 
     if (e.key === 'Delete') {
       this.removeSelected();
+      return;
+    }
+
+    if (e.key === 'p') {
+      this.toggleDebugGeometry();
     }
   }
 
   removeSelected() {
-    const {selected, resources} = this.state;
+    const { selected, resources } = this.state;
 
     const newResources = {};
     const keys = Object.keys(resources);
@@ -210,13 +214,13 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: {[resId]: {$set: entry}}
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
 
   saveDirty() {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -230,7 +234,7 @@ class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -238,7 +242,7 @@ class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: {dirty: false}
+                $merge: { dirty: false }
               }
             }
           })
@@ -252,7 +256,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {left, top}
+            $merge: { left, top }
           }
         }
       })
@@ -260,7 +264,7 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -271,8 +275,8 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: {$merge: {[field]: fieldValue}},
-            errors: {$merge: {[field]: errors}}
+            value: { $merge: { [field]: fieldValue } },
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
@@ -283,7 +287,7 @@ class Workspace extends Component<Props> {
         update(prevState, {
           resources: {
             [resId]: {
-              $merge: {dirty: true}
+              $merge: { dirty: true }
             }
           }
         })
@@ -291,11 +295,46 @@ class Workspace extends Component<Props> {
     }
   }
 
-  render() {
-    const {connectDropTarget} = this.props;
-    const {resources, schemas, selected, renderContext} = this.state;
+  toggleDebugGeometry() {
+    const { debugGeometry } = this.state;
+    this.setState(prevState =>
+      update(prevState, {
+        debugGeometry: { $set: !debugGeometry }
+      })
+    );
+  }
 
-    log.silly("rendering workspace");
+  renderDebugTopology(resources) {
+    const { debugGeometry } = this.state;
+    if (!debugGeometry) {
+      return null;
+    }
+
+    return (
+      <svg style={Object.assign({}, styles)}>
+        {Object.keys(resources).map(key => {
+          const { left, top, width, height } = resources[key];
+          log.silly(`${left}, ${top}, ${width}, ${height}`);
+          return (
+            <path
+              style={{ zIndex: 5 }}
+              key={`debug-${key}`}
+              d={`M ${left} ${top} L ${left + width} ${top + height}`}
+              stroke="red"
+              strokeWidth={2}
+              color="red"
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
+  render() {
+    const { connectDropTarget } = this.props;
+    const { resources, schemas, selected, renderContext } = this.state;
+
+    log.silly('rendering workspace');
     // log.silly(schemas);
     // log.silly(resources);
     // log.silly(selected);
@@ -310,74 +349,63 @@ class Workspace extends Component<Props> {
           tabIndex="-1" /* required for proper KeyDown */
           role="presentation"
         >
-          <div>{Object.keys(resources).map(key => {
-            const {left, top, value, type, dirty, errors} = resources[key];
-            const schema = schemas[type];
-            const isSelected = selected[key];
+          <div>
+            {Object.keys(resources).map(key => {
+              const { left, top, value, type, dirty, errors } = resources[key];
+              const schema = schemas[type];
+              const isSelected = selected[key];
 
-            const selfThis = this;
-            const onChange = function changeWrapper(
-              fieldId,
-              fieldValue,
-              fieldErrors,
-              skipDirty
-            ) {
-              selfThis.onDataChange(
-                key,
+              const selfThis = this;
+              const onChange = function changeWrapper(
                 fieldId,
                 fieldValue,
                 fieldErrors,
                 skipDirty
+              ) {
+                selfThis.onDataChange(
+                  key,
+                  fieldId,
+                  fieldValue,
+                  fieldErrors,
+                  skipDirty
+                );
+              };
+
+              const onSelect = function selectWrapper(add) {
+                selfThis.addSelected(key, add);
+              };
+
+              const name = value[Consts.FIELD_NAME_NAME];
+
+              return (
+                <Dragable
+                  key={key}
+                  id={key}
+                  left={left}
+                  top={top}
+                  connectDragSource=""
+                  isDragging="false"
+                >
+                  <ResourceForm
+                    schema={schema}
+                    data={value}
+                    name={name}
+                    dirty={dirty}
+                    onChange={onChange}
+                    onSelect={onSelect}
+                    resId={key}
+                    selected={isSelected}
+                    errors={errors}
+                    renderContext={renderContext}
+                  />
+                </Dragable>
               );
-            };
-
-            const onSelect = function selectWrapper(add) {
-              selfThis.addSelected(key, add);
-            };
-
-            const name = value[Consts.FIELD_NAME_NAME];
-
-            return (
-              <Dragable
-                key={key}
-                id={key}
-                left={left}
-                top={top}
-                connectDragSource=""
-                isDragging="false"
-              >
-                <ResourceForm
-                  schema={schema}
-                  data={value}
-                  name={name}
-                  dirty={dirty}
-                  onChange={onChange}
-                  onSelect={onSelect}
-                  resId={key}
-                  selected={isSelected}
-                  errors={errors}
-                  renderContext={renderContext}/>
-
-              </Dragable>
-            );
-          })
-
-          }
+            })}
           </div>
-          <div id="debug-topology">{this.renderDebugTopology(resources)}</div>
+          <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
         </div>
       </div>
     );
-  }
-
-  renderDebugTopology(resources) {
-    return (<svg style={Object.assign({}, styles)}>{
-      Object.keys(resources).map(key => {
-        const {left, top, width, height} = resources[key];
-        log.silly(`${left}, ${top}, ${width}, ${height}`);
-        return (<path style={{zIndex: 5}} key={`debug-${key}`} d={`M ${left} ${top} L ${left + width} ${top + height}`} stroke="red" strokeWidth={1} color="red"/>)
-      })}
-    </svg>);
   }
 }
 
