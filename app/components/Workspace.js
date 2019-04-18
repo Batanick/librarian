@@ -1,6 +1,5 @@
 // @flow
 import React, {Component} from 'react';
-
 // noinspection ES6CheckImport
 import {DropTarget} from 'react-dnd';
 import PropTypes from 'prop-types';
@@ -107,15 +106,12 @@ class Workspace extends Component<Props> {
     );
   };
 
-  getPosition(id) {
+  getResourceInfo = (id) => {
     const {resources} = this.state;
-    const res = resources[id];
-    if (res == null) {
-      return null;
-    }
-  }
+    return resources[id];
+  };
 
-  findResourceAt(x, y) {
+  findResourceAt = (x, y) => {
     const {resources} = this.state;
     const ids = Object.keys(resources);
     for (let i = 0; i < ids.length; i += 1) {
@@ -127,7 +123,7 @@ class Workspace extends Component<Props> {
     }
 
     return null;
-  }
+  };
 
   resetWorkspace(schemas) {
     log.info(`Loading schemas: ${Object.keys(schemas)}`);
@@ -142,11 +138,11 @@ class Workspace extends Component<Props> {
   }
 
   buildRenderContext() {
-    const context = {
-      registerSize: this.registerSize
+    return {
+      registerSize: this.registerSize,
+      getResourceInfo: this.getResourceInfo,
+      findResourceAt: this.findResourceAt
     };
-
-    return context;
   }
 
   addSelected(key, add) {

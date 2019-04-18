@@ -99,7 +99,7 @@ export default class ResourceForm extends Component<Props> {
             value={fieldData}
             onChangeField={onChange}
             resourceId={resId}
-            renderingContext={renderContext}/>
+            renderContext={renderContext}/>
         );
 
       default:
@@ -112,7 +112,7 @@ export default class ResourceForm extends Component<Props> {
     log.silly(`Rendering: ${resId}`);
     return (
       <Card ref={this.target} style={{borderWidth: '2px'}}
-            border={selected ? 'warning' : 'info'}
+            border={selected ? 'warning' : 'primary'}
             role="presentation"
       >
         <Card.Header>

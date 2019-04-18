@@ -2,8 +2,13 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
-import * as Consts from '../../constants/constants';
+import Button from 'react-bootstrap/Button';
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+
 import SvgConnector from "./SvgConnector";
+
+import * as Consts from '../../constants/constants';
 
 const log = require('electron-log');
 
@@ -13,21 +18,14 @@ type Props = {
   resourceId: PropTypes.string,
   value: PropTypes.string,
   onChangeField: PropTypes.func,
-  renderingContext: PropTypes.obj
+  renderContext: PropTypes.obj
 };
 
-const overlayStyles = {
-  position: 'absolute',
-  width: Consts.WORKSPACE_SIZE,
-  height: Consts.WORKSPACE_SIZE,
-  pointerEvents: 'none',
-  left: 0,
-  top: 0,
-  zIndex: 2
-};
-
-const svgStyles = {
-  pointerEvents: 'auto',
+const labelStyles = {
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  wordwrap: false,
+  width: "100px"
 };
 
 export default class ResourceRef extends Component<Props> {
@@ -51,19 +49,56 @@ export default class ResourceRef extends Component<Props> {
     return `${resourceId}_${id}`;
   }
 
+  renderLink(targetInfo) {
+    const current = this.target.current;
+    if (!current) {
+      log.error("No connector coordinates");
+      return;
+    }
+    const box = current.getBoundingClientRect();
+    const connector = {x: box.right, y: (box.top + box.height / 2)};
+
+    const {left, top, height} = targetInfo;
+    return (
+      <SvgConnector x1={connector.x} x2={left} y1={connector.y} y2={top + (height / 2)}/>
+    )
+  }
+
+  focusOnResource = (resId) => {
+
+  };
+
+  renderField() {
+    const {value, renderContext} = this.props;
+
+    if (value == null) {
+      log.error("Render selection of new");
+    } else {
+      const info = renderContext.getResourceInfo(value);
+      log.error(info);
+      if (info == null) {
+        log.error("Load resource:" + value);
+      } else {
+        log.error("Draw link");
+
+        return (<div>
+          <Button className="btn btn-secondary btn-sm" onClick={this.focusOnResource(value)}> → </Button>
+          {this.renderLink(info)}
+        </div>);
+      }
+    }
+  }
+
   render() {
-    const {value, id} = this.props;
+    const {value} = this.props;
 
-    return (<div>
-        <SvgConnector/>
-        <input ref={this.target}
-               id={id}
-               type="checkbox"
-               className="form-control form-control-sm"
-               checked={value === 'true'}
-               onChange={this.update}
-        />
-
+    return (<div ref={this.target}>
+        <Row>
+          <Col>
+            <label className={"overflow-hidden"} style={Object.assign({}, labelStyles)}>{value}</label>
+          </Col>
+          <Col sm={"auto"}> {this.renderField()}</Col>
+        </Row>
       </div>
     );
   }
