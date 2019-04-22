@@ -10,10 +10,9 @@ const log = require('electron-log');
 
 
 type Props = {
-  x1: PropTypes.int,
-  x2: PropTypes.int,
-  y1: PropTypes.int,
-  y2: PropTypes.int
+  start: PropTypes.obj,
+  finish: PropTypes.obj,
+  selectionMode: PropTypes.bool
 };
 
 const overlayStyles = {
@@ -51,12 +50,12 @@ export default class SvgConnector extends Component<Props> {
 
   render() {
     const target = document.getElementById("workspace");
-    const {x1, x2, y1, y2} = this.props;
+    const {start, finish} = this.props;
 
-    const cx = x1 + ((x2 - x1) / 2);
-    const cy = y1 + ((y2 - y1) / 2);
+    const cx = start.x + ((finish.x - start.x) / 2);
+    const cy = start.y + ((finish.y - start.y) / 2);
 
-    const path = `M${x1} ${y1} Q ${cx} ${y1}, ${cx} ${cy} T ${x2} ${y2}`;
+    const path = `M${start.x} ${start.y} Q ${cx} ${start.y}, ${cx} ${cy} T ${finish.x} ${finish.y}`;
 
     return ReactDOM.createPortal(
       (

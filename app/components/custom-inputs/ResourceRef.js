@@ -60,7 +60,10 @@ export default class ResourceRef extends Component<Props> {
 
     const {left, top, height} = targetInfo;
     return (
-      <SvgConnector x1={connector.x} x2={left} y1={connector.y} y2={top + (height / 2)}/>
+      <SvgConnector 
+                    start={{x: connector.x, y : connector.y}}
+                    finish={{x: left, y: top + (height / 2)}}
+                    selectionMode={false} />
     )
   }
 
