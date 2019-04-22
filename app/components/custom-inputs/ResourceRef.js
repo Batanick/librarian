@@ -8,8 +8,6 @@ import Col from "react-bootstrap/Col";
 
 import SvgConnector from "./SvgConnector";
 
-import * as Consts from '../../constants/constants';
-
 const log = require('electron-log');
 
 
@@ -36,12 +34,8 @@ export default class ResourceRef extends Component<Props> {
   }
 
   update = value => {
-    // if (value == null || value === "") {
-    //   return;
-    // }
-    // const {overlayContext, onChangeField} = this.props;
-    // overlayContext.registerLink(this.getId(), value);
-    // onChangeField(id, value, [], false);
+    const { id, onChangeField } = this.props;
+    onChangeField(id, value);
   };
 
   getId() {
@@ -60,15 +54,18 @@ export default class ResourceRef extends Component<Props> {
 
     const {left, top, height} = targetInfo;
     return (
-      <SvgConnector 
-                    start={{x: connector.x, y : connector.y}}
+      <SvgConnector start={{x: connector.x, y: connector.y}}
                     finish={{x: left, y: top + (height / 2)}}
-                    selectionMode={false} />
+      />
     )
   }
 
   focusOnResource = (resId) => {
 
+  };
+
+  deleteRef = (resId) => {
+    this.update(null);
   };
 
   renderField() {
@@ -78,14 +75,12 @@ export default class ResourceRef extends Component<Props> {
       log.error("Render selection of new");
     } else {
       const info = renderContext.getResourceInfo(value);
-      log.error(info);
       if (info == null) {
         log.error("Load resource:" + value);
       } else {
-        log.error("Draw link");
-
         return (<div>
-          <Button className="btn btn-secondary btn-sm" onClick={this.focusOnResource(value)}> → </Button>
+          <Button className="btn btn-secondary btn-sm" onClick={(e) => this.deleteRef(value)}> X </Button>
+          <Button className="btn btn-secondary btn-sm" onClick={(e) => this.focusOnResource(value)}> → </Button>
           {this.renderLink(info)}
         </div>);
       }

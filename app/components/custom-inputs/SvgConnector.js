@@ -6,23 +6,18 @@ import PropTypes from 'prop-types';
 
 import * as Consts from '../../constants/constants';
 
-const log = require('electron-log');
-
-
 type Props = {
   start: PropTypes.obj,
-  finish: PropTypes.obj,
-  selectionMode: PropTypes.bool
+  finish: PropTypes.obj
 };
 
 const overlayStyles = {
   position: 'absolute',
   width: Consts.WORKSPACE_SIZE,
   height: Consts.WORKSPACE_SIZE,
-  pointerEvents: 'none',
   left: 0,
   top: 0,
-  zIndex: 2
+  zIndex: -1
 };
 
 const svgStyles = {
@@ -32,35 +27,27 @@ const svgStyles = {
   fill: "transparent"
 };
 
-const svgStylesSelected = {
-  pointerEvents: 'auto',
-  stroke: "#3498DB",
-  strokeWidth: 3,
-  fill: "transparent"
-};
-
 export default class SvgConnector extends Component<Props> {
   constructor(...args) {
     super(...args);
-
-    this.state = {
-      selected: false
-    }
   }
 
   render() {
     const target = document.getElementById("workspace");
     const {start, finish} = this.props;
 
-    const cx = start.x + ((finish.x - start.x) / 2);
-    const cy = start.y + ((finish.y - start.y) / 2);
+    const p1 = start;
+    const p2 = finish;
 
-    const path = `M${start.x} ${start.y} Q ${cx} ${start.y}, ${cx} ${cy} T ${finish.x} ${finish.y}`;
+    const cx = p1.x + ((p2.x - p1.x) / 2);
+    const cy = p1.y + ((p2.y - p1.y) / 2);
+
+    const path = `M${p1.x} ${p1.y} Q ${cx} ${p1.y}, ${cx} ${cy} T ${p2.x} ${p2.y}`;
 
     return ReactDOM.createPortal(
       (
         <svg style={Object.assign({}, overlayStyles)}>
-          <path style={Object.assign({}, svgStyles)} onClick={(e) => log.silly("click")} d={path}/>
+          <path style={Object.assign({}, svgStyles)} d={path}/>
         </svg>), target
     );
   }

@@ -349,9 +349,9 @@ class Workspace extends Component<Props> {
     const {connectDropTarget} = this.props;
     const {resources, schemas, selected, renderContext} = this.state;
 
-    log.silly('rendering workspace');
+    // log.silly('rendering workspace');
     // log.silly(schemas);
-    // log.silly(resources);
+    log.silly(resources);
     // log.silly(selected);
 
     return connectDropTarget(
