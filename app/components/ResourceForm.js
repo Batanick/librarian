@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -10,7 +10,7 @@ import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 
 import * as Validators from './custom-inputs/validators';
-import ResourceRef from "./custom-inputs/ResourceRef";
+import ResourceRef from './custom-inputs/ResourceRef';
 
 const log = require('electron-log');
 
@@ -36,14 +36,14 @@ export default class ResourceForm extends Component<Props> {
   }
 
   componentDidMount(): void {
-    const {renderContext, resId} = this.props;
+    const { renderContext, resId } = this.props;
     const box = this.target.current.getBoundingClientRect();
 
     renderContext.registerSize(resId, box.width, box.height);
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const {onChange, renderContext, resId} = this.props;
+    const { onChange, renderContext, resId } = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -99,7 +99,8 @@ export default class ResourceForm extends Component<Props> {
             value={fieldData}
             onChangeField={onChange}
             resourceId={resId}
-            renderContext={renderContext}/>
+            renderContext={renderContext}
+          />
         );
 
       default:
@@ -108,12 +109,14 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
-    const {name, resId, dirty, schema, data, selected, errors} = this.props;
-    log.silly(`Rendering: ${resId}`);
+    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+    // log.silly(`Rendering: ${resId}`);
     return (
-      <Card ref={this.target} style={{borderWidth: '2px'}}
-            border={selected ? 'warning' : 'primary'}
-            role="presentation"
+      <Card
+        ref={this.target}
+        style={{ borderWidth: '2px' }}
+        border={selected ? 'warning' : 'primary'}
+        role="presentation"
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>
