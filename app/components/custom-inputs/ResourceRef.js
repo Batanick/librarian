@@ -77,7 +77,7 @@ export default class ResourceRef extends Component<Props> {
 
   deleteRef = () => {
     log.error('Cleaning value');
-    this.update(null);
+    this.update(undefined);
   };
 
   renderField() {
