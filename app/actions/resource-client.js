@@ -25,9 +25,12 @@ export default class ResourceClient {
       this.createResourceOfType(arg);
     });
 
-    ipcMain.on(Events.DIALOG_SELECT_EXISTING_RESOURCE, (event, arg) => {
-      this.addExistingResources(arg);
-    });
+    ipcMain.on(
+      Events.DIALOG_SELECT_EXISTING_RESOURCE,
+      (event, arg, options) => {
+        this.addExistingResources(arg, options);
+      }
+    );
 
     ipcMain.on(Events.WORKSPACE_READY, () => {
       if (this.resourceSystem.schemas) {
@@ -148,7 +151,7 @@ export default class ResourceClient {
     );
   }
 
-  addExistingResources(resources) {
+  addExistingResources(resources, options) {
     resources.forEach(key => {
       const resource = this.resourceSystem.resources[key];
       if (!resource) {
@@ -158,7 +161,8 @@ export default class ResourceClient {
 
       this.mainWindow.webContents.send(
         Events.WORKSPACE_LOAD_RESOURCE,
-        resource
+        resource,
+        options
       );
     });
   }

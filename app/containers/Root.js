@@ -6,9 +6,17 @@ import Workspace from '../components/Workspace';
 import ResourceTypeSelect from '../components/ResourceTypeSelect';
 import ExistingResourceSelect from '../components/ExistingResourceSelect';
 
+// const log = require('electron-log');
+
 type Props = {};
 
 class Root extends Component<Props> {
+  props: Props;
+
+  constructor(...args) {
+    super(args);
+  }
+
   render() {
     return (
       <div>

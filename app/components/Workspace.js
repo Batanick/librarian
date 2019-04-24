@@ -1,10 +1,10 @@
 // @flow
 import React, { Component } from 'react';
-
 // noinspection ES6CheckImport
 import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
+import ReactResizeDetector from 'react-resize-detector';
 
 import ResourceForm from './ResourceForm';
 
@@ -23,8 +23,8 @@ type Props = {
 
 const styles = {
   position: 'relative',
-  width: 5000,
-  height: 5000
+  width: Consts.WORKSPACE_SIZE,
+  height: Consts.WORKSPACE_SIZE
 };
 
 const scrollableStyles = {
@@ -63,20 +63,20 @@ class Workspace extends Component<Props> {
 
   constructor(...args) {
     super(args);
+
+    const renderContext = this.buildRenderContext();
     this.state = {
       resources: {},
       schemas: {},
-      selected: {}
+      selected: {},
+      renderContext
     };
-
-    this.resetSelected = this.resetSelected.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
   }
 
   componentDidMount() {
     const selfThis = this;
-    ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res) => {
-      selfThis.addResource(res);
+    ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res, options) => {
+      selfThis.addResource(res, options);
     });
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
@@ -95,14 +95,59 @@ class Workspace extends Component<Props> {
     ipcRenderer.removeAllListeners(Events.WORKSPACE_UPDATE_SCHEMAS);
   }
 
+  registerSize = (id, width, height) => {
+    this.setState(prevState =>
+      update(prevState, {
+        resources: {
+          [id]: {
+            $merge: { width, height }
+          }
+        }
+      })
+    );
+  };
+
+  getResourceInfo = id => {
+    const { resources } = this.state;
+    return resources[id];
+  };
+
+  findResourceAt = (x, y) => {
+    const { resources } = this.state;
+    const ids = Object.keys(resources);
+    for (let i = 0; i < ids.length; i += 1) {
+      const key = ids[i];
+      const { left, top, width, height } = resources[key];
+      if (x > left && x < left + width && y > top && y < top + height) {
+        return key;
+      }
+    }
+
+    return null;
+  };
+
+  loadResourceById = (id, opt) => {
+    ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
+  };
+
   resetWorkspace(schemas) {
     log.info(`Loading schemas: ${Object.keys(schemas)}`);
 
+    const renderContext = this.buildRenderContext();
     this.setState({
       resources: {},
       schemas,
-      selected: {}
+      selected: {},
+      renderContext
     });
+  }
+
+  buildRenderContext() {
+    return {
+      getResourceInfo: this.getResourceInfo,
+      findResourceAt: this.findResourceAt,
+      loadResourceById: this.loadResourceById
+    };
   }
 
   addSelected(key, add) {
@@ -116,6 +161,15 @@ class Workspace extends Component<Props> {
       })
     );
   }
+
+  handleClick = event => {
+    const resId = this.findResourceAt(event.clientX, event.clientY);
+    if (resId == null) {
+      this.resetSelected();
+    }
+
+    this.addSelected(resId, event.shiftKey);
+  };
 
   resetSelected() {
     this.setState(prevState =>
@@ -133,6 +187,11 @@ class Workspace extends Component<Props> {
 
     if (e.key === 'Delete') {
       this.removeSelected();
+      return;
+    }
+
+    if (e.key === 'p') {
+      this.toggleDebugGeometry();
     }
   }
 
@@ -159,20 +218,33 @@ class Workspace extends Component<Props> {
     );
   }
 
-  addResource(res) {
+  addResource(res, opt) {
     const resId = res[Consts.FIELD_NAME_ID];
     const type = res[Consts.FIELD_NAME_TYPE];
     log.info(`Loading resource [${resId}] of type ${type}`);
 
-    const entry = {
-      top: 20,
-      left: 20,
-      title: resId,
-      value: res,
-      errors: {},
-      dirty: false,
-      type
-    };
+    let leftPos = 20;
+    let topPos = 20;
+
+    if (opt != null && opt.pos != null) {
+      const { left, top } = opt.pos;
+      leftPos = left;
+      topPos = top;
+    }
+
+    const { resources } = this.state;
+    let entry = resources[resId];
+    if (!entry) {
+      entry = {};
+    }
+
+    entry.top = topPos;
+    entry.left = leftPos;
+    entry.title = resId;
+    entry.value = res;
+    entry.errors = {};
+    entry.dirty = false;
+    entry.type = type;
 
     this.setState(prevState =>
       update(prevState, {
@@ -191,7 +263,6 @@ class Workspace extends Component<Props> {
       }
     });
 
-    log.silly(`Sending save response: ${JSON.stringify(result)}`);
     ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
   }
 
@@ -257,10 +328,45 @@ class Workspace extends Component<Props> {
     }
   }
 
+  toggleDebugGeometry() {
+    const { debugGeometry } = this.state;
+    this.setState(prevState =>
+      update(prevState, {
+        debugGeometry: { $set: !debugGeometry }
+      })
+    );
+  }
+
+  renderDebugTopology(resources) {
+    const { debugGeometry } = this.state;
+    if (!debugGeometry) {
+      return null;
+    }
+
+    return (
+      <svg style={Object.assign({}, styles)}>
+        {Object.keys(resources).map(key => {
+          const { left, top, width, height } = resources[key];
+          return (
+            <path
+              style={{ zIndex: 5 }}
+              key={`debug-${key}`}
+              d={`M ${left} ${top} L ${left + width} ${top + height}`}
+              stroke="red"
+              strokeWidth={2}
+              color="red"
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
   render() {
     const { connectDropTarget } = this.props;
-    const { resources, schemas, selected } = this.state;
+    const { resources, schemas, selected, renderContext } = this.state;
 
+    // log.silly('rendering workspace');
     // log.silly(schemas);
     // log.silly(resources);
     // log.silly(selected);
@@ -270,61 +376,70 @@ class Workspace extends Component<Props> {
         <div
           id="workspace"
           style={Object.assign({}, styles)}
-          onClick={this.resetSelected}
+          onClick={e => this.handleClick(e)}
           onKeyDown={e => this.handleKeyPress(e)}
           tabIndex="-1" /* required for proper KeyDown */
           role="presentation"
         >
-          {Object.keys(resources).map(key => {
-            const { left, top, value, type, dirty, errors } = resources[key];
-            const schema = schemas[type];
-            const isSelected = selected[key];
+          <div>
+            {Object.keys(resources).map(key => {
+              const { left, top, value, type, dirty, errors } = resources[key];
+              const schema = schemas[type];
+              const isSelected = selected[key];
 
-            const selfThis = this;
-            const onChange = function changeWrapper(
-              fieldId,
-              fieldValue,
-              fieldErrors,
-              skipDirty
-            ) {
-              selfThis.onDataChange(
-                key,
+              const selfThis = this;
+              const onChange = function changeWrapper(
                 fieldId,
                 fieldValue,
                 fieldErrors,
                 skipDirty
+              ) {
+                selfThis.onDataChange(
+                  key,
+                  fieldId,
+                  fieldValue,
+                  fieldErrors,
+                  skipDirty
+                );
+              };
+
+              const resizeCallback = (width, height) => {
+                this.registerSize(key, width, height);
+              };
+
+              const name = value[Consts.FIELD_NAME_NAME];
+
+              return (
+                <Dragable
+                  key={key}
+                  id={key}
+                  left={left}
+                  top={top}
+                  connectDragSource=""
+                  isDragging="false"
+                >
+                  <ReactResizeDetector
+                    handleWidth
+                    handleHeight
+                    onResize={resizeCallback}
+                  >
+                    <ResourceForm
+                      schema={schema}
+                      data={value}
+                      name={name}
+                      dirty={dirty}
+                      onChange={onChange}
+                      resId={key}
+                      selected={isSelected}
+                      errors={errors}
+                      renderContext={renderContext}
+                    />
+                  </ReactResizeDetector>
+                </Dragable>
               );
-            };
-
-            const onSelect = function selectWrapper(add) {
-              selfThis.addSelected(key, add);
-            };
-
-            const name = value[Consts.FIELD_NAME_NAME];
-
-            return (
-              <Dragable
-                key={key}
-                id={key}
-                left={left}
-                top={top}
-                connectDragSource=""
-                isDragging="false"
-              >
-                <ResourceForm
-                  schema={schema}
-                  data={value}
-                  name={name}
-                  dirty={dirty}
-                  onChange={onChange}
-                  onSelect={onSelect}
-                  resId={key}
-                  selected={isSelected}
-                  errors={errors}
-                />
-              </Dragable>
-            );
-          })}
+            })}
+          </div>
+          <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
         </div>
       </div>
     );

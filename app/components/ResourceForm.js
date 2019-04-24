@@ -10,6 +10,7 @@ import StringField from './custom-inputs/StringField';
 import BooleanField from './custom-inputs/BooleanField';
 
 import * as Validators from './custom-inputs/validators';
+import ResourceRef from './custom-inputs/ResourceRef';
 
 const log = require('electron-log');
 
@@ -20,9 +21,9 @@ type Props = {
   schema: PropTypes.obj,
   data: PropTypes.obj,
   onChange: PropTypes.fun,
-  onSelect: PropTypes.fun,
   selected: PropTypes.bool,
-  errors: PropTypes.obj
+  errors: PropTypes.obj,
+  renderContext: PropTypes.obj
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -30,16 +31,12 @@ export default class ResourceForm extends Component<Props> {
 
   constructor(...args) {
     super(args);
-  }
 
-  handleSelect(event) {
-    const { onSelect } = this.props;
-    event.stopPropagation();
-    onSelect(event.shiftKey);
+    this.target = React.createRef();
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange } = this.props;
+    const { onChange, renderContext, resId } = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -88,6 +85,16 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
           />
         );
+      case 'ref':
+        return (
+          <ResourceRef
+            id={key}
+            value={fieldData}
+            onChangeField={onChange}
+            resourceId={resId}
+            renderContext={renderContext}
+          />
+        );
 
       default:
         log.error(`Unable to render field of type: ${fieldInfo.type}`);
@@ -95,14 +102,16 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
+    // log.silly(`Rendering: ${resId}`);
+
     const { name, resId, dirty, schema, data, selected, errors } = this.props;
 
     return (
       <Card
-        border={selected ? 'info' : 'primary'}
+        ref={this.target}
+        style={{ borderWidth: '2px' }}
+        border={selected ? 'warning' : 'primary'}
         role="presentation"
-        onClick={evt => this.handleSelect(evt)}
-        onKeyDown={() => {}}
       >
         <Card.Header>
           <h5>{dirty ? `${name}*` : name}</h5>
