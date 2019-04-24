@@ -5,8 +5,9 @@ import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-
 import Form from 'react-bootstrap/Form';
+
+import update from 'immutability-helper';
 
 // noinspection ES6CheckImport
 import Octicon, {
@@ -17,6 +18,7 @@ import Octicon, {
 } from '@githubprimer/octicons-react';
 
 import SvgConnector from './SvgConnector';
+import ResourceSelectOverlay from './ResourceSelectOverlay';
 
 const log = require('electron-log');
 
@@ -32,7 +34,6 @@ const labelStyles = {
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   wordwrap: false
-  // width: '100px'
 };
 
 export default class ResourceRef extends Component<Props> {
@@ -40,6 +41,10 @@ export default class ResourceRef extends Component<Props> {
     super(...args);
 
     this.target = React.createRef();
+
+    this.state = {
+      selecting: false
+    };
   }
 
   update = value => {
@@ -47,19 +52,11 @@ export default class ResourceRef extends Component<Props> {
     onChangeField(id, value);
   };
 
-  getId() {
-    const { id, resourceId } = this.props;
-    return `${resourceId}_${id}`;
-  }
-
   renderLink(targetInfo) {
-    const { current } = this.target;
-    if (!current) {
-      log.warn('No connector coordinates');
+    const connector = this.getConnector();
+    if (!connector) {
       return;
     }
-    const box = current.getBoundingClientRect();
-    const connector = { x: box.right, y: box.top + box.height / 2 };
 
     const { left, top, height } = targetInfo;
     if (!left || !top || !height) {
@@ -72,6 +69,16 @@ export default class ResourceRef extends Component<Props> {
         finish={{ x: left, y: top + height / 2 }}
       />
     );
+  }
+
+  getConnector() {
+    const { current } = this.target;
+    if (!current) {
+      log.warn('No connector coordinates');
+      return null;
+    }
+    const box = current.getBoundingClientRect();
+    return { x: box.right + 10, y: box.top + box.height / 2 };
   }
 
   loadResource = resId => {
@@ -93,7 +100,47 @@ export default class ResourceRef extends Component<Props> {
     this.update(undefined);
   };
 
-  selectRef = () => {};
+  onStartSelect = () => {
+    this.setState(prevState =>
+      update(prevState, {
+        selecting: { $set: true }
+      })
+    );
+  };
+
+  onSelect = (x, y) => {
+    const { renderContext } = this.props;
+    const resId = renderContext.findResourceAt(x, y);
+    if (resId) {
+      this.update(resId);
+    }
+
+    this.onSelectCancel();
+  };
+
+  onSelectCancel = () => {
+    this.setState(prevState =>
+      update(prevState, {
+        selecting: { $set: false }
+      })
+    );
+  };
+
+  renderSelectOverlay() {
+    const { selecting } = this.state;
+    if (!selecting) {
+      return;
+    }
+
+    const connector = this.getConnector();
+    return (
+      <ResourceSelectOverlay
+        start={connector}
+        onSelect={this.onSelect}
+        onCancel={this.onSelectCancel}
+      />
+    );
+  }
 
   renderField() {
     const { value, renderContext } = this.props;
@@ -103,9 +150,10 @@ export default class ResourceRef extends Component<Props> {
         <div>
           <Button
             className="btn btn-secondary btn-sm"
-            onClick={() => this.selectRef()}
+            onClick={() => this.onStartSelect()}
           >
             <Octicon size="small" icon={FileSymlinkFile} />
+            {this.renderSelectOverlay()}
           </Button>
         </div>
       );

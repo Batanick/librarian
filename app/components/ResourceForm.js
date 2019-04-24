@@ -102,8 +102,10 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
+    // log.silly(`Rendering: ${resId}`);
+
     const { name, resId, dirty, schema, data, selected, errors } = this.props;
-    log.silly(`Rendering: ${resId}`);
+
     return (
       <Card
         ref={this.target}
