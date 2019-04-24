@@ -6,6 +6,16 @@ import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
+import Form from 'react-bootstrap/Form';
+
+// noinspection ES6CheckImport
+import Octicon, {
+  Link,
+  FileSymlinkFile,
+  LinkExternal,
+  X
+} from '@githubprimer/octicons-react';
+
 import SvgConnector from './SvgConnector';
 
 const log = require('electron-log');
@@ -21,8 +31,8 @@ type Props = {
 const labelStyles = {
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
-  wordwrap: false,
-  width: '100px'
+  wordwrap: false
+  // width: '100px'
 };
 
 export default class ResourceRef extends Component<Props> {
@@ -45,13 +55,17 @@ export default class ResourceRef extends Component<Props> {
   renderLink(targetInfo) {
     const { current } = this.target;
     if (!current) {
-      log.error('No connector coordinates');
+      log.warn('No connector coordinates');
       return;
     }
     const box = current.getBoundingClientRect();
     const connector = { x: box.right, y: box.top + box.height / 2 };
 
     const { left, top, height } = targetInfo;
+    if (!left || !top || !height) {
+      return null;
+    }
+
     return (
       <SvgConnector
         start={{ x: connector.x, y: connector.y }}
@@ -76,58 +90,64 @@ export default class ResourceRef extends Component<Props> {
   };
 
   deleteRef = () => {
-    log.error('Cleaning value');
     this.update(undefined);
   };
+
+  selectRef = () => {};
 
   renderField() {
     const { value, renderContext } = this.props;
 
     if (value == null) {
-      log.error('Render selection of new');
-    } else {
-      const info = renderContext.getResourceInfo(value);
-      if (info == null) {
-        return (
-          <div>
-            <Button
-              className="btn btn-secondary btn-sm"
-              onClick={() => this.deleteRef(value)}
-            >
-              {' '}
-              X{' '}
-            </Button>
-            <Button
-              className="btn btn-secondary btn-sm"
-              onClick={() => this.loadResource(value)}
-            >
-              {' '}
-              →{' '}
-            </Button>
-          </div>
-        );
-      }
+      return (
+        <div>
+          <Button
+            className="btn btn-secondary btn-sm"
+            onClick={() => this.selectRef()}
+          >
+            <Octicon size="small" icon={FileSymlinkFile} />
+          </Button>
+        </div>
+      );
+    }
 
+    const info = renderContext.getResourceInfo(value);
+    if (info == null) {
       return (
         <div>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.deleteRef(value)}
           >
-            {' '}
-            X{' '}
+            <Octicon size="small" icon={X} />
           </Button>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.loadResource(value)}
           >
-            {' '}
-            →{' '}
+            <Octicon size="small" icon={LinkExternal} />
           </Button>
-          {this.renderLink(info)}
         </div>
       );
     }
+
+    return (
+      <div>
+        <Button
+          className="btn btn-secondary btn-sm"
+          onClick={() => this.deleteRef(value)}
+        >
+          <Octicon size="small" icon={X} />
+        </Button>
+        <Button
+          className="btn btn-secondary btn-sm"
+          onClick={() => this.loadResource(value)}
+        >
+          <Octicon size="small" icon={Link} />
+        </Button>
+        {this.renderLink(info)}
+      </div>
+    );
   }
 
   render() {
@@ -135,16 +155,15 @@ export default class ResourceRef extends Component<Props> {
 
     return (
       <div ref={this.target}>
-        <Row>
-          <Col>
-            <h6
-              className="overflow-hidden"
-              style={Object.assign({}, labelStyles)}
-            >
-              {value}
-            </h6>
-          </Col>
-          <Col sm="auto"> {this.renderField()}</Col>
+        <Row lg="auto">
+          <Form.Label
+            column
+            className="overflow-hidden"
+            style={Object.assign({}, labelStyles)}
+          >
+            {value}
+          </Form.Label>
+          <Col lg="auto"> {this.renderField()}</Col>
         </Row>
       </div>
     );

@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
+import ReactResizeDetector from 'react-resize-detector';
 
 import ResourceForm from './ResourceForm';
 
@@ -143,7 +144,6 @@ class Workspace extends Component<Props> {
 
   buildRenderContext() {
     return {
-      registerSize: this.registerSize,
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById
@@ -232,15 +232,19 @@ class Workspace extends Component<Props> {
       topPos = top;
     }
 
-    const entry = {
-      top: topPos,
-      left: leftPos,
-      title: resId,
-      value: res,
-      errors: {},
-      dirty: false,
-      type
-    };
+    const { resources } = this.state;
+    let entry = resources[resId];
+    if (!entry) {
+      entry = {};
+    }
+
+    entry.top = topPos;
+    entry.left = leftPos;
+    entry.title = resId;
+    entry.value = res;
+    entry.errors = {};
+    entry.dirty = false;
+    entry.type = type;
 
     this.setState(prevState =>
       update(prevState, {
@@ -259,7 +263,6 @@ class Workspace extends Component<Props> {
       }
     });
 
-    log.silly(`Sending save response: ${JSON.stringify(result)}`);
     ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
   }
 
@@ -400,6 +403,10 @@ class Workspace extends Component<Props> {
                 );
               };
 
+              const resizeCallback = (width, height) => {
+                this.registerSize(key, width, height);
+              };
+
               const name = value[Consts.FIELD_NAME_NAME];
 
               return (
@@ -411,17 +418,23 @@ class Workspace extends Component<Props> {
                   connectDragSource=""
                   isDragging="false"
                 >
-                  <ResourceForm
-                    schema={schema}
-                    data={value}
-                    name={name}
-                    dirty={dirty}
-                    onChange={onChange}
-                    resId={key}
-                    selected={isSelected}
-                    errors={errors}
-                    renderContext={renderContext}
-                  />
+                  <ReactResizeDetector
+                    handleWidth
+                    handleHeight
+                    onResize={resizeCallback}
+                  >
+                    <ResourceForm
+                      schema={schema}
+                      data={value}
+                      name={name}
+                      dirty={dirty}
+                      onChange={onChange}
+                      resId={key}
+                      selected={isSelected}
+                      errors={errors}
+                      renderContext={renderContext}
+                    />
+                  </ReactResizeDetector>
                 </Dragable>
               );
             })}
