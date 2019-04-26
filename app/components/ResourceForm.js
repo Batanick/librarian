@@ -110,7 +110,7 @@ export default class ResourceForm extends Component<Props> {
       <Card
         ref={this.target}
         style={{ borderWidth: '2px' }}
-        border={selected ? 'warning' : 'primary'}
+        border={selected ? 'warning' : 'success'}
         role="presentation"
       >
         <Card.Header>
