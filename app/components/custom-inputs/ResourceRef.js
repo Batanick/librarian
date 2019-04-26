@@ -9,21 +9,21 @@ import Form from 'react-bootstrap/Form';
 
 import update from 'immutability-helper';
 // noinspection ES6CheckImport
-import Octicon, {FileSymlinkFile, Link, LinkExternal, X} from '@githubprimer/octicons-react';
+import Octicon, {FileSymlinkFile, Link, LinkExternal, Plus, X} from '@githubprimer/octicons-react';
 
 import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
+import ModalSelect from "../ModalSelect";
 
 const log = require('electron-log');
 
 type Props = {
   id: PropTypes.string,
-  isReference: PropTypes.bool,
   resourceId: PropTypes.string,
   value: PropTypes.string,
   onChangeField: PropTypes.func,
   renderContext: PropTypes.obj,
-  allowedTypes: PropTypes.array
+  fieldInfo: PropTypes.obj
 };
 
 const labelStyles = {
@@ -40,7 +40,8 @@ export default class ResourceRef extends Component<Props> {
     this.target = React.createRef();
 
     this.state = {
-      selecting: false
+      selecting: false,
+      creatingNew: false
     };
   }
 
@@ -105,6 +106,14 @@ export default class ResourceRef extends Component<Props> {
     );
   };
 
+  onCreateNew = () => {
+    this.setState(prevState =>
+      update(prevState, {
+        creatingNew: {$set: true}
+      })
+    );
+  };
+
   onSelect = (x, y) => {
     const resId = this.canConnect(x, y);
     if (resId) {
@@ -122,8 +131,26 @@ export default class ResourceRef extends Component<Props> {
     );
   };
 
+  onCreateCancel = () => {
+    this.setState(prevState =>
+      update(prevState, {
+        creatingNew: {$set: false}
+      })
+    );
+  };
+
+  onTypeSelected = (type) => {
+    this.onCreateCancel();
+    if (!type) {
+      return;
+    }
+
+    log.error(type);
+  };
+
   canConnect = (x, y) => {
-    const {renderContext, allowedTypes, resourceId} = this.props;
+    const {renderContext, fieldInfo, resourceId} = this.props;
+
     const resId = renderContext.findResourceAt(x, y);
     if (!resId || resourceId === resId) {
       return null;
@@ -135,14 +162,14 @@ export default class ResourceRef extends Component<Props> {
       return null;
     }
 
+    const allowedTypes = fieldInfo.allowedTypes;
     const schemaId = resource.type;
-    if (!allowedTypes.includes(schemaId)) {
+    if (!allowedTypes || !allowedTypes.includes(schemaId)) {
       return null;
     }
 
     return resId;
   };
-
 
   renderSelectOverlay() {
     const {selecting} = this.state;
@@ -160,6 +187,29 @@ export default class ResourceRef extends Component<Props> {
     );
   }
 
+  renderTypeSelect() {
+    const {creatingNew} = this.state;
+    if (!creatingNew) {
+      return;
+    }
+
+    const {fieldInfo} = this.props;
+    let allowedTypes = fieldInfo.allowedTypes;
+    if (!allowedTypes) {
+      allowedTypes = [];
+    }
+
+    return (
+      <ModalSelect
+        okButtonLabel="Create"
+        onClose={this.onCreateCancel}
+        onSelect={this.onTypeSelected}
+        options={allowedTypes}
+        show
+        title="Select type to create"/>
+    );
+  }
+
   renderField() {
     const {value, renderContext} = this.props;
 
@@ -168,11 +218,18 @@ export default class ResourceRef extends Component<Props> {
         <div>
           <Button
             className="btn btn-secondary btn-sm"
+            onClick={() => this.onCreateNew()}
+          >
+            <Octicon size="small" icon={Plus}/>
+          </Button>
+          <Button
+            className="btn btn-secondary btn-sm"
             onClick={() => this.onStartSelect()}
           >
             <Octicon size="small" icon={FileSymlinkFile}/>
-            {this.renderSelectOverlay()}
           </Button>
+          {this.renderSelectOverlay()}
+          {this.renderTypeSelect()}
         </div>
       );
     }

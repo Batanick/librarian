@@ -38,7 +38,9 @@ export default class ResourceForm extends Component<Props> {
   renderInput(key, fieldInfo, fieldData, errors) {
     const {onChange, renderContext, resId} = this.props;
 
-    switch (fieldInfo.type) {
+    const {restrictions, type} = fieldInfo;
+
+    switch (type) {
       case 'string':
         return (
           <StringField
@@ -93,8 +95,7 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
             resourceId={resId}
             renderContext={renderContext}
-            isReference
-            allowedTypes={["SimpleSchema"]}
+            fieldInfo={fieldInfo}
           />
         );
       case 'object':
@@ -105,8 +106,8 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
             resourceId={resId}
             renderContext={renderContext}
-            isReference={false}
-            allowedTypes={["SimpleSchema"]}/>
+            fieldInfo={fieldInfo}
+          />
         );
 
       default:

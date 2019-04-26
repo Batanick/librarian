@@ -69,14 +69,16 @@ class Workspace extends Component<Props> {
       resources: {},
       schemas: {},
       selected: {},
-      renderContext
+      renderContext,
+      creatingNew: false
     };
   }
 
   componentDidMount() {
     const selfThis = this;
     ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res, options) => {
-      selfThis.addResource(res, options);
+      const type = res[Consts.FIELD_NAME_TYPE];
+      selfThis.addResource(res, type, options);
     });
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
@@ -146,7 +148,8 @@ class Workspace extends Component<Props> {
     return {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
-      loadResourceById: this.loadResourceById
+      loadResourceById: this.loadResourceById,
+      addNestedResource: this.addNestedResource
     };
   }
 
@@ -218,9 +221,12 @@ class Workspace extends Component<Props> {
     );
   }
 
-  addResource(res, opt) {
+  addNestedResource(type, opt) {
+    log.error(type, opt);
+  }
+
+  addResource(res, type, opt) {
     const resId = res[Consts.FIELD_NAME_ID];
-    const type = res[Consts.FIELD_NAME_TYPE];
     log.info(`Loading resource [${resId}] of type ${type}`);
 
     let leftPos = 20;
