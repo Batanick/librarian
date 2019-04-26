@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -36,7 +36,7 @@ export default class ResourceForm extends Component<Props> {
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange, renderContext, resId } = this.props;
+    const {onChange, renderContext, resId} = this.props;
 
     switch (fieldInfo.type) {
       case 'string':
@@ -93,7 +93,20 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
             resourceId={resId}
             renderContext={renderContext}
+            isReference
+            allowedTypes={["SimpleSchema"]}
           />
+        );
+      case 'object':
+        return (
+          <ResourceRef
+            id={key}
+            value={fieldData}
+            onChangeField={onChange}
+            resourceId={resId}
+            renderContext={renderContext}
+            isReference={false}
+            allowedTypes={["SimpleSchema"]}/>
         );
 
       default:
@@ -104,12 +117,12 @@ export default class ResourceForm extends Component<Props> {
   render() {
     // log.silly(`Rendering: ${resId}`);
 
-    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+    const {name, resId, dirty, schema, data, selected, errors} = this.props;
 
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px' }}
+        style={{borderWidth: '2px'}}
         border={selected ? 'warning' : 'success'}
         role="presentation"
       >

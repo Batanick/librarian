@@ -1,0 +1,21 @@
+{
+  "$id": "NestedSchema",
+  "title": "A registration form",
+  "description": "A simple form example.",
+  "type": "object",
+  "properties": {
+    "firstName": {
+      "type": "string",
+      "title": "First name",
+      "default": "Chucccck"
+    },
+    "lastName": {
+      "type": "string",
+      "title": "Last name"
+    },
+    "nested": {
+      "type": "object",
+      "title": "Reference"
+    }
+  }
+}

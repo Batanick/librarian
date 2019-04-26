@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import * as ReactDOM from 'react-dom';
 
 import update from 'immutability-helper';
@@ -15,7 +15,8 @@ import * as Consts from '../../constants/constants';
 type Props = {
   start: PropTypes.obj,
   onSelect: PropTypes.fun,
-  onCancel: PropTypes.fun
+  onCancel: PropTypes.fun,
+  canConnect: PropTypes.fun
 };
 
 const overlayStyles = {
@@ -28,25 +29,42 @@ const overlayStyles = {
   pointerEvents: 'auto'
 };
 
+const overlayStylesNotAllowed = {
+  position: 'absolute',
+  width: Consts.WORKSPACE_SIZE,
+  height: Consts.WORKSPACE_SIZE,
+  left: 0,
+  top: 0,
+  zIndex: 2,
+  pointerEvents: 'auto',
+  cursor: "not-allowed"
+};
+
 const svgStyles = {
   stroke: '#3498DB',
   strokeWidth: 3,
   fill: 'transparent'
 };
 
+
 export default class ResourceSelectOverlay extends Component<Props> {
   constructor(...args) {
     super(...args);
 
-    this.state = { cursor: null };
+    this.state = {cursor: null, canConnect: true};
   }
 
   onMouseMove = e => {
     const x = e.clientX;
     const y = e.clientY;
+
+    const {canConnect} = this.props;
+    const dropAllowed = canConnect(x, y) != null;
+
     this.setState(prevState =>
       update(prevState, {
-        cursor: { $set: { x, y } }
+        cursor: {$set: {x, y}},
+        canConnect: {$set: dropAllowed}
       })
     );
   };
@@ -58,24 +76,24 @@ export default class ResourceSelectOverlay extends Component<Props> {
   };
 
   cancelSelection() {
-    const { onCancel } = this.props;
+    const {onCancel} = this.props;
     onCancel();
   }
 
   renderSvg() {
-    const { start } = this.props;
-    const { cursor } = this.state;
+    const {start} = this.props;
+    const {cursor} = this.state;
 
     if (!start || !cursor) {
       return;
     }
 
     const path = SvgUtils.BuildSvgPath(start.x, start.y, cursor.x, cursor.y);
-    return <path style={Object.assign({}, svgStyles)} d={path} />;
+    return <path style={Object.assign({}, svgStyles)} d={path}/>;
   }
 
   onClickHandler = e => {
-    const { onSelect } = this.props;
+    const {onSelect} = this.props;
 
     const x = e.clientX;
     const y = e.clientY;
@@ -86,10 +104,12 @@ export default class ResourceSelectOverlay extends Component<Props> {
 
   render() {
     const target = document.getElementById('workspace');
+    const {canConnect} = this.state;
+    const overlayStyle = canConnect ? overlayStyles : overlayStylesNotAllowed;
 
     return ReactDOM.createPortal(
       <svg
-        style={Object.assign({}, overlayStyles)}
+        style={Object.assign({}, overlayStyle)}
         onMouseMove={e => this.onMouseMove(e)}
         onClick={this.onClickHandler}
         onKeyDown={e => this.onKeyPress(e)}
