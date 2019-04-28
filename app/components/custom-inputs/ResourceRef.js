@@ -194,7 +194,7 @@ export default class ResourceRef extends Component<Props> {
     }
 
     const {fieldInfo} = this.props;
-    let allowedTypes = fieldInfo.allowedTypes;
+    let {allowedTypes} = fieldInfo;
     if (!allowedTypes) {
       allowedTypes = [];
     }
