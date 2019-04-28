@@ -11,6 +11,7 @@ import ResourceForm from './ResourceForm';
 import Dragable from './Dragable';
 
 import * as IdHelpers from '../js/id-helpers';
+import * as JsonUtils from '../js/js-utils';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
 
@@ -70,8 +71,7 @@ class Workspace extends Component<Props> {
       resources: {},
       schemas: {},
       selected: {},
-      renderContext,
-      creatingNew: false
+      renderContext
     };
   }
 
@@ -292,14 +292,53 @@ class Workspace extends Component<Props> {
     });
   }
 
+  assembleResource(resId, res) {
+    const {schemas, resources} = this.state;
+    const type = res[Consts.FIELD_NAME_TYPE];
+    const schema = schemas[type];
+
+    if (schema == null) {
+      log.error(`Unable to find schema for type: ${type}`);
+      return null;
+    }
+
+    if (schema.properties == null) {
+      return res;
+    }
+
+    const result = JsonUtils.clone(res);
+
+    Object.keys(schema.properties).forEach(name => {
+      const prop = schema.properties[name];
+      if (prop.type !== "object") {
+        result[name] = res[name];
+      }
+
+      const value = res[name];
+      if (value == null) {
+        return;
+      }
+
+      const id = IdHelpers.getNestedId(resId, name);
+      const actualValue = resources[id];
+      if (actualValue != null) {
+        result[name] = this.assembleResource(id, actualValue.value);
+      }
+    });
+
+    return result;
+  }
+
   saveDirty() {
     const {resources} = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
-      if (res.dirty) {
-        result[key] = res.value;
+      if (!res.dirty || res.nested) {
+        return;
       }
+
+      result[key] = this.assembleResource(key, res.value);
     });
 
     ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
@@ -355,10 +394,12 @@ class Workspace extends Component<Props> {
     );
 
     if (!skipDirty) {
+      const parentId = IdHelpers.getParentId(resId);
+
       this.setState(prevState =>
         update(prevState, {
           resources: {
-            [resId]: {
+            [parentId]: {
               $merge: {dirty: true}
             }
           }
@@ -421,7 +462,7 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const {left, top, value, type, dirty, errors} = resources[key];
+            const {left, top, value, type, dirty, errors, nested} = resources[key];
             const schema = schemas[type];
 
             if (schema == null) {
@@ -477,6 +518,7 @@ class Workspace extends Component<Props> {
                     selected={isSelected}
                     errors={errors}
                     renderContext={renderContext}
+                    nested={nested}
                   />
                 </ReactResizeDetector>
               </Dragable>

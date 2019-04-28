@@ -12,6 +12,8 @@ import BooleanField from './custom-inputs/BooleanField';
 import * as Validators from './custom-inputs/validators';
 import ResourceRef from './custom-inputs/ResourceRef';
 
+import * as Consts from '../constants/constants';
+
 const log = require('electron-log');
 
 type Props = {
@@ -97,7 +99,7 @@ export default class ResourceForm extends Component<Props> {
             resourceId={resId}
             renderContext={renderContext}
             fieldInfo={fieldInfo}
-            reference={true}
+            reference
           />
         );
       case 'object':
@@ -118,12 +120,35 @@ export default class ResourceForm extends Component<Props> {
     }
   }
 
+  getTypeName = () => {
+    const {schema} = this.props;
+    return schema[Consts.FIELD_NAME_ID];
+  };
+
+  renderHeader() {
+    const {name, resId, dirty, nested} = this.props;
+    const typeName = this.getTypeName();
+    if (nested) {
+      return (<Card.Header>
+        <h6 className="card-subtitle text-muted">{typeName}</h6>
+      </Card.Header>)
+    }
+
+    return (<Card.Header>
+      <h5>{dirty ? `${name}*` : name}</h5>
+      <h6 className="card-subtitle text-muted">{resId}</h6>
+    </Card.Header>);
+  }
+
   render() {
     // log.silly(`Rendering: ${resId}`);
 
-    const {name, resId, dirty, schema, data, selected, errors, nested} = this.props;
+    const {schema, data, selected, errors, nested} = this.props;
 
-    const border = selected ? "warning" : (nested ? "primary" : "success")
+    let border = nested ? "info" : "success";
+    if (selected) {
+      border = "warning";
+    }
 
     return (
       <Card
@@ -132,10 +157,7 @@ export default class ResourceForm extends Component<Props> {
         border={border}
         role="presentation"
       >
-        <Card.Header>
-          <h5>{dirty ? `${name}*` : name}</h5>
-          <h6 className="card-subtitle text-muted">{resId}</h6>
-        </Card.Header>
+        {this.renderHeader()}
 
         <Card.Body className="card-body">
           <Form>
