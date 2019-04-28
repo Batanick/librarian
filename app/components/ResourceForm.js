@@ -26,7 +26,8 @@ type Props = {
   selected: PropTypes.bool,
   errors: PropTypes.obj,
   renderContext: PropTypes.obj,
-  nested: PropTypes.bool
+  nested: PropTypes.bool,
+  orphan: PropTypes.bool
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -41,7 +42,7 @@ export default class ResourceForm extends Component<Props> {
   renderInput(key, fieldInfo, fieldData, errors) {
     const {onChange, renderContext, resId} = this.props;
 
-    const {restrictions, type} = fieldInfo;
+    const {type} = fieldInfo;
 
     switch (type) {
       case 'string':
@@ -143,11 +144,15 @@ export default class ResourceForm extends Component<Props> {
   render() {
     // log.silly(`Rendering: ${resId}`);
 
-    const {schema, data, selected, errors, nested} = this.props;
+    const {schema, data, selected, errors, nested, orphan} = this.props;
 
-    let border = nested ? "info" : "success";
+    let border = "info";
     if (selected) {
       border = "warning";
+    } else if (orphan) {
+      border = "danger";
+    } else if (!nested) {
+      border = "success";
     }
 
     return (

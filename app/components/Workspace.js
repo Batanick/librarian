@@ -135,6 +135,33 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
+  onUnlink = (resId) => {
+    const {resources} = this.state;
+    const resValue = resources[resId];
+    if (resValue == null) {
+      return;
+    }
+
+    if (resValue.nested) {
+      const newId = JsonUtils.generateUUID();
+
+      this.setState(prevState =>
+        update(prevState, {
+          resources: {
+            $apply: function changeId(obj) {
+              const copy = Object.assign({}, obj)
+              const res = obj[resId];
+              delete copy[resId];
+              res.orphan = true;
+              copy[newId] = res;
+              return copy
+            }
+          }
+        })
+      );
+    }
+  };
+
   resetWorkspace(schemas) {
     log.info(`Loading schemas: ${Object.keys(schemas)}`);
 
@@ -152,7 +179,7 @@ class Workspace extends Component<Props> {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
-      loadNestedObject: this.loadNestedObject
+      onUnlink: this.onUnlink
     };
   }
 
@@ -202,23 +229,26 @@ class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const {selected, resources} = this.state;
+    const {selected} = this.state;
 
-    const newResources = {};
-    const keys = Object.keys(resources);
+    const keys = Object.keys(selected);
 
     for (let i = 0; i < keys.length; i += 1) {
-      const key = keys[i];
-      if (!selected[key]) {
-        newResources[key] = resources[key];
-      }
+      this.removeResource(keys[i]);
     }
 
+    this.resetSelected();
+  }
+
+  removeResource(resId) {
     this.setState(prevState =>
       update(prevState, {
-        $set: {
-          resources: newResources,
-          selected: {}
+        resources: {
+          $apply: function removeResource(obj) {
+            const copy = Object.assign({}, obj)
+            delete copy[resId];
+            return copy
+          }
         }
       })
     );
@@ -246,7 +276,6 @@ class Workspace extends Component<Props> {
 
     entry.top = topPos;
     entry.left = leftPos;
-    entry.title = resId;
     entry.value = res;
     entry.errors = {};
     entry.dirty = false;
@@ -448,7 +477,7 @@ class Workspace extends Component<Props> {
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    // log.silly(resources);
+    log.silly(resources);
     // log.silly(selected);
 
     return connectDropTarget(
@@ -462,7 +491,7 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const {left, top, value, type, dirty, errors, nested} = resources[key];
+            const {left, top, value, type, dirty, errors, nested, orphan} = resources[key];
             const schema = schemas[type];
 
             if (schema == null) {
@@ -519,6 +548,7 @@ class Workspace extends Component<Props> {
                     errors={errors}
                     renderContext={renderContext}
                     nested={nested}
+                    orphan={orphan}
                   />
                 </ReactResizeDetector>
               </Dragable>

@@ -15,8 +15,6 @@ import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
 import ModalSelect from "../ModalSelect";
 
-import * as Consts from '../../constants/constants';
-
 const log = require('electron-log');
 
 type Props = {
@@ -48,9 +46,12 @@ export default class ResourceRef extends Component<Props> {
     };
   }
 
-  update = value => {
-    const {id, onChangeField} = this.props;
-    onChangeField(id, value);
+  update = newValue => {
+    const {id, onChangeField, renderContext, value} = this.props;
+    onChangeField(id, newValue);
+    if (value != null && value !== newValue) {
+      renderContext.onUnlink(value);
+    }
   };
 
   renderLink(targetInfo) {
@@ -148,7 +149,6 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    const {renderContext, reference} = this.props;
     this.update({});
   };
 
@@ -166,7 +166,7 @@ export default class ResourceRef extends Component<Props> {
       return null;
     }
 
-    const allowedTypes = fieldInfo.allowedTypes;
+    const {allowedTypes} = fieldInfo;
     const schemaId = resource.type;
     if (!allowedTypes || !allowedTypes.includes(schemaId)) {
       return null;
@@ -278,7 +278,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   render() {
-    const {value, reference} = this.props;
+    const {value} = this.props;
 
     return (
       <div ref={this.target}>
