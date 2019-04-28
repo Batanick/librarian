@@ -23,7 +23,8 @@ type Props = {
   onChange: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
-  renderContext: PropTypes.obj
+  renderContext: PropTypes.obj,
+  nested: PropTypes.bool
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -96,6 +97,7 @@ export default class ResourceForm extends Component<Props> {
             resourceId={resId}
             renderContext={renderContext}
             fieldInfo={fieldInfo}
+            reference={true}
           />
         );
       case 'object':
@@ -107,6 +109,7 @@ export default class ResourceForm extends Component<Props> {
             resourceId={resId}
             renderContext={renderContext}
             fieldInfo={fieldInfo}
+            reference={false}
           />
         );
 
@@ -118,13 +121,15 @@ export default class ResourceForm extends Component<Props> {
   render() {
     // log.silly(`Rendering: ${resId}`);
 
-    const {name, resId, dirty, schema, data, selected, errors} = this.props;
+    const {name, resId, dirty, schema, data, selected, errors, nested} = this.props;
+
+    const border = selected ? "warning" : (nested ? "primary" : "success")
 
     return (
       <Card
         ref={this.target}
         style={{borderWidth: '2px'}}
-        border={selected ? 'warning' : 'success'}
+        border={border}
         role="presentation"
       >
         <Card.Header>

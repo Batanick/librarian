@@ -15,6 +15,8 @@ import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
 import ModalSelect from "../ModalSelect";
 
+import * as Consts from '../../constants/constants';
+
 const log = require('electron-log');
 
 type Props = {
@@ -23,7 +25,8 @@ type Props = {
   value: PropTypes.string,
   onChangeField: PropTypes.func,
   renderContext: PropTypes.obj,
-  fieldInfo: PropTypes.obj
+  fieldInfo: PropTypes.obj,
+  reference: PropTypes.bool
 };
 
 const labelStyles = {
@@ -145,7 +148,8 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    log.error(type);
+    const {renderContext, reference} = this.props;
+    this.update({});
   };
 
   canConnect = (x, y) => {
@@ -274,7 +278,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   render() {
-    const {value} = this.props;
+    const {value, reference} = this.props;
 
     return (
       <div ref={this.target}>

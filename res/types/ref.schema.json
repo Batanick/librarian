@@ -15,7 +15,8 @@
     },
     "reference": {
       "type": "ref",
-      "title": "Reference"
+      "title": "Reference",
+	  "allowedTypes": ["SimpleSchema"]
     }
   }
 }

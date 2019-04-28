@@ -9,14 +9,14 @@
       "title": "First name",
       "default": "Chucccck"
     },
-    "lastName": {
-      "type": "string",
-      "title": "Last name"
-    },
     "nested": {
       "type": "object",
       "title": "Reference",
       "allowedTypes": ["NestingSchema"]
+    },
+    "lastName": {
+      "type": "string",
+      "title": "Last name"
     }
   }
 }

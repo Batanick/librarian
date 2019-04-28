@@ -10,6 +10,7 @@ import ResourceForm from './ResourceForm';
 
 import Dragable from './Dragable';
 
+import * as IdHelpers from '../js/id-helpers';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
 
@@ -78,7 +79,9 @@ class Workspace extends Component<Props> {
     const selfThis = this;
     ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res, options) => {
       const type = res[Consts.FIELD_NAME_TYPE];
-      selfThis.addResource(res, type, options);
+      const resId = res[Consts.FIELD_NAME_ID];
+
+      selfThis.registerResource(resId, type, res, options);
     });
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
@@ -149,7 +152,7 @@ class Workspace extends Component<Props> {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
-      addNestedResource: this.addNestedResource
+      loadNestedObject: this.loadNestedObject
     };
   }
 
@@ -221,13 +224,10 @@ class Workspace extends Component<Props> {
     );
   }
 
-  addNestedResource(type, opt) {
-    log.error(type, opt);
-  }
-
-  addResource(res, type, opt) {
-    const resId = res[Consts.FIELD_NAME_ID];
+  registerResource(resId, type, res, opt, nested) {
     log.info(`Loading resource [${resId}] of type ${type}`);
+
+    this.disassembleResource(resId, type, res, opt);
 
     let leftPos = 20;
     let topPos = 20;
@@ -251,12 +251,45 @@ class Workspace extends Component<Props> {
     entry.errors = {};
     entry.dirty = false;
     entry.type = type;
+    entry.nested = nested;
 
     this.setState(prevState =>
       update(prevState, {
         resources: {[resId]: {$set: entry}}
       })
     );
+  }
+
+  disassembleResource(resId, type, res, opt) {
+    const {schemas} = this.state;
+    const schema = schemas[type];
+
+    if (schema == null) {
+      log.error(`Unable to find schema for type: ${type}`);
+      return;
+    }
+
+    if (schema.properties == null) {
+      return;
+    }
+
+    Object.keys(schema.properties).forEach(name => {
+      const prop = schema.properties[name];
+      if (prop.type !== "object") {
+        return;
+      }
+
+      const value = res[name];
+      if (value == null) {
+        return;
+      }
+
+      const id = IdHelpers.getNestedId(resId, name);
+
+      res[name] = id;
+
+      this.registerResource(id, value[Consts.FIELD_NAME_TYPE], value, opt, true);
+    });
   }
 
   saveDirty() {
@@ -390,6 +423,12 @@ class Workspace extends Component<Props> {
           {Object.keys(resources).map(key => {
             const {left, top, value, type, dirty, errors} = resources[key];
             const schema = schemas[type];
+
+            if (schema == null) {
+              log.error(`Unable to fine schema for type: ${type}`);
+              return;
+            }
+
             const isSelected = selected[key];
 
             const selfThis = this;
