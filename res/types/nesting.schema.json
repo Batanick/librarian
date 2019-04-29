@@ -1,5 +1,5 @@
 {
-  "$id": "ReferenceSchema",
+  "$id": "NestingSchema",
   "title": "A registration form",
   "description": "A simple form example.",
   "type": "object",
@@ -9,14 +9,14 @@
       "title": "First name",
       "default": "Chucccck"
     },
+    "nested": {
+      "type": "object",
+      "title": "Reference",
+      "allowedTypes": ["NestingSchema"]
+    },
     "lastName": {
       "type": "string",
       "title": "Last name"
-    },
-    "reference": {
-      "type": "ref",
-      "title": "Reference",
-      "allowedTypes": ["SimpleSchema"]
     }
   }
 }

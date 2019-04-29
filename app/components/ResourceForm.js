@@ -12,6 +12,8 @@ import BooleanField from './custom-inputs/BooleanField';
 import * as Validators from './custom-inputs/validators';
 import ResourceRef from './custom-inputs/ResourceRef';
 
+import * as Consts from '../constants/constants';
+
 const log = require('electron-log');
 
 type Props = {
@@ -23,7 +25,9 @@ type Props = {
   onChange: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
-  renderContext: PropTypes.obj
+  renderContext: PropTypes.obj,
+  nested: PropTypes.bool,
+  orphan: PropTypes.bool
 };
 
 export default class ResourceForm extends Component<Props> {
@@ -38,7 +42,9 @@ export default class ResourceForm extends Component<Props> {
   renderInput(key, fieldInfo, fieldData, errors) {
     const { onChange, renderContext, resId } = this.props;
 
-    switch (fieldInfo.type) {
+    const { type } = fieldInfo;
+
+    switch (type) {
       case 'string':
         return (
           <StringField
@@ -93,6 +99,20 @@ export default class ResourceForm extends Component<Props> {
             onChangeField={onChange}
             resourceId={resId}
             renderContext={renderContext}
+            fieldInfo={fieldInfo}
+            reference
+          />
+        );
+      case 'object':
+        return (
+          <ResourceRef
+            id={key}
+            value={fieldData}
+            onChangeField={onChange}
+            resourceId={resId}
+            renderContext={renderContext}
+            fieldInfo={fieldInfo}
+            reference={false}
           />
         );
 
@@ -101,22 +121,52 @@ export default class ResourceForm extends Component<Props> {
     }
   }
 
+  getTypeName = () => {
+    const { schema } = this.props;
+    return schema[Consts.FIELD_NAME_ID];
+  };
+
+  renderHeader() {
+    const { name, resId, dirty, nested } = this.props;
+    const typeName = this.getTypeName();
+    if (nested) {
+      return (
+        <Card.Header>
+          <h6 className="card-subtitle text-muted">{typeName}</h6>
+        </Card.Header>
+      );
+    }
+
+    return (
+      <Card.Header>
+        <h5>{dirty ? `${name}*` : name}</h5>
+        <h6 className="card-subtitle text-muted">{resId}</h6>
+      </Card.Header>
+    );
+  }
+
   render() {
     // log.silly(`Rendering: ${resId}`);
 
-    const { name, resId, dirty, schema, data, selected, errors } = this.props;
+    const { schema, data, selected, errors, nested, orphan } = this.props;
+
+    let border = 'info';
+    if (selected) {
+      border = 'warning';
+    } else if (orphan) {
+      border = 'danger';
+    } else if (!nested) {
+      border = 'success';
+    }
 
     return (
       <Card
         ref={this.target}
         style={{ borderWidth: '2px' }}
-        border={selected ? 'warning' : 'success'}
+        border={border}
         role="presentation"
       >
-        <Card.Header>
-          <h5>{dirty ? `${name}*` : name}</h5>
-          <h6 className="card-subtitle text-muted">{resId}</h6>
-        </Card.Header>
+        {this.renderHeader()}
 
         <Card.Body className="card-body">
           <Form>
