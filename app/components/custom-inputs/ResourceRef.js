@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import Button from 'react-bootstrap/Button';
@@ -9,11 +9,18 @@ import Form from 'react-bootstrap/Form';
 
 import update from 'immutability-helper';
 // noinspection ES6CheckImport
-import Octicon, {FileSymlinkFile, Link, LinkExternal, Plus, X} from '@githubprimer/octicons-react';
+import Octicon, {
+  FileSymlinkFile,
+  Link,
+  LinkExternal,
+  Plus,
+  X
+} from '@githubprimer/octicons-react';
 
 import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
-import ModalSelect from "../ModalSelect";
+import ModalSelect from '../ModalSelect';
+import * as IdHelpers from '../../js/id-helpers';
 
 const log = require('electron-log');
 
@@ -31,7 +38,7 @@ const labelStyles = {
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   wordwrap: false,
-  maxWidth: "150px"
+  maxWidth: '150px'
 };
 
 export default class ResourceRef extends Component<Props> {
@@ -46,11 +53,36 @@ export default class ResourceRef extends Component<Props> {
     };
   }
 
+  componentDidUpdate() {
+    const { value, reference, resourceId, id } = this.props;
+    if (!reference) {
+      // making sure that we always have correct value for non referenced types
+      const correctId = IdHelpers.getNestedId(resourceId, id);
+      if (value != null && value !== correctId) {
+        log.warn(`Fixing id value for ${correctId}`);
+        this.update(correctId);
+      }
+    }
+  }
+
   update = newValue => {
-    const {id, onChangeField, renderContext, value} = this.props;
+    const {
+      id,
+      resourceId,
+      onChangeField,
+      renderContext,
+      value,
+      reference
+    } = this.props;
     onChangeField(id, newValue);
-    if (value != null && value !== newValue) {
-      renderContext.onUnlink(value);
+
+    if (!reference && value !== newValue) {
+      if (value != null && newValue == null) {
+        renderContext.makeOrphan(value);
+      } else if (value == null && newValue != null) {
+        const oldId = IdHelpers.getNestedId(resourceId, id);
+        renderContext.retakeOrphan(newValue, oldId);
+      }
     }
   };
 
@@ -60,39 +92,37 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    const {left, top, height} = targetInfo;
+    const { left, top, height } = targetInfo;
     if (!left || !top || !height) {
       return null;
     }
 
     return (
       <SvgConnector
-        start={{x: connector.x, y: connector.y}}
-        finish={{x: left, y: top + height / 2}}
+        start={{ x: connector.x, y: connector.y }}
+        finish={{ x: left, y: top + height / 2 }}
       />
     );
   }
 
   getConnector() {
-    const {current} = this.target;
+    const { current } = this.target;
     if (!current) {
       log.warn('No connector coordinates');
       return null;
     }
     const box = current.getBoundingClientRect();
-    return {x: box.right + 10, y: box.top + box.height / 2};
+    return { x: box.right + 10, y: box.top + box.height / 2 };
   }
 
   loadResource = resId => {
-    const {renderContext, resourceId} = this.props;
+    const { renderContext, resourceId } = this.props;
     const opt = {};
 
     const selfInfo = renderContext.getResourceInfo(resourceId);
     if (selfInfo) {
-      opt.pos = {
-        left: selfInfo.left + selfInfo.width + 50,
-        top: selfInfo.top
-      };
+      opt.left = selfInfo.left + selfInfo.width + 50;
+      opt.top = selfInfo.top;
     }
 
     renderContext.loadResourceById(resId, opt);
@@ -105,7 +135,7 @@ export default class ResourceRef extends Component<Props> {
   onStartSelect = () => {
     this.setState(prevState =>
       update(prevState, {
-        selecting: {$set: true}
+        selecting: { $set: true }
       })
     );
   };
@@ -113,7 +143,7 @@ export default class ResourceRef extends Component<Props> {
   onCreateNew = () => {
     this.setState(prevState =>
       update(prevState, {
-        creatingNew: {$set: true}
+        creatingNew: { $set: true }
       })
     );
   };
@@ -130,7 +160,7 @@ export default class ResourceRef extends Component<Props> {
   onSelectCancel = () => {
     this.setState(prevState =>
       update(prevState, {
-        selecting: {$set: false}
+        selecting: { $set: false }
       })
     );
   };
@@ -138,22 +168,26 @@ export default class ResourceRef extends Component<Props> {
   onCreateCancel = () => {
     this.setState(prevState =>
       update(prevState, {
-        creatingNew: {$set: false}
+        creatingNew: { $set: false }
       })
     );
   };
 
-  onTypeSelected = (type) => {
+  onTypeSelected = type => {
     this.onCreateCancel();
     if (!type) {
       return;
     }
 
-    this.update({});
+    const { renderContext, id, resourceId } = this.props;
+
+    const refId = IdHelpers.getNestedId(resourceId, id);
+    renderContext.createNested(refId, resourceId, type);
+    this.update(refId);
   };
 
   canConnect = (x, y) => {
-    const {renderContext, fieldInfo, resourceId} = this.props;
+    const { renderContext, fieldInfo, resourceId, reference } = this.props;
 
     const resId = renderContext.findResourceAt(x, y);
     if (!resId || resourceId === resId) {
@@ -161,12 +195,19 @@ export default class ResourceRef extends Component<Props> {
     }
 
     const resource = renderContext.getResourceInfo(resId);
-    log.silly(resource);
     if (!resource || !resource.type) {
       return null;
     }
 
-    const {allowedTypes} = fieldInfo;
+    if (reference === resource.nested) {
+      return null;
+    }
+
+    if (!reference && !resource.orphan) {
+      return null;
+    }
+
+    const { allowedTypes } = fieldInfo;
     const schemaId = resource.type;
     if (!allowedTypes || !allowedTypes.includes(schemaId)) {
       return null;
@@ -176,7 +217,7 @@ export default class ResourceRef extends Component<Props> {
   };
 
   renderSelectOverlay() {
-    const {selecting} = this.state;
+    const { selecting } = this.state;
     if (!selecting) {
       return;
     }
@@ -187,18 +228,19 @@ export default class ResourceRef extends Component<Props> {
         start={connector}
         onSelect={this.onSelect}
         onCancel={this.onSelectCancel}
-        canConnect={this.canConnect}/>
+        canConnect={this.canConnect}
+      />
     );
   }
 
   renderTypeSelect() {
-    const {creatingNew} = this.state;
+    const { creatingNew } = this.state;
     if (!creatingNew) {
       return;
     }
 
-    const {fieldInfo} = this.props;
-    let {allowedTypes} = fieldInfo;
+    const { fieldInfo } = this.props;
+    let { allowedTypes } = fieldInfo;
     if (!allowedTypes) {
       allowedTypes = [];
     }
@@ -210,12 +252,13 @@ export default class ResourceRef extends Component<Props> {
         onSelect={this.onTypeSelected}
         options={allowedTypes}
         show
-        title="Select type to create"/>
+        title="Select type to create"
+      />
     );
   }
 
   renderField() {
-    const {value, renderContext} = this.props;
+    const { value, renderContext } = this.props;
 
     if (value == null) {
       return (
@@ -224,13 +267,13 @@ export default class ResourceRef extends Component<Props> {
             className="btn btn-secondary btn-sm"
             onClick={() => this.onCreateNew()}
           >
-            <Octicon size="small" icon={Plus}/>
+            <Octicon size="small" icon={Plus} />
           </Button>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.onStartSelect()}
           >
-            <Octicon size="small" icon={FileSymlinkFile}/>
+            <Octicon size="small" icon={FileSymlinkFile} />
           </Button>
           {this.renderSelectOverlay()}
           {this.renderTypeSelect()}
@@ -246,13 +289,13 @@ export default class ResourceRef extends Component<Props> {
             className="btn btn-secondary btn-sm"
             onClick={() => this.deleteRef(value)}
           >
-            <Octicon size="small" icon={X}/>
+            <Octicon size="small" icon={X} />
           </Button>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.loadResource(value)}
           >
-            <Octicon size="small" icon={LinkExternal}/>
+            <Octicon size="small" icon={LinkExternal} />
           </Button>
         </div>
       );
@@ -264,13 +307,13 @@ export default class ResourceRef extends Component<Props> {
           className="btn btn-secondary btn-sm"
           onClick={() => this.deleteRef(value)}
         >
-          <Octicon size="small" icon={X}/>
+          <Octicon size="small" icon={X} />
         </Button>
         <Button
           className="btn btn-secondary btn-sm"
           onClick={() => this.loadResource(value)}
         >
-          <Octicon size="small" icon={Link}/>
+          <Octicon size="small" icon={Link} />
         </Button>
         {this.renderLink(info)}
       </div>
@@ -278,7 +321,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   render() {
-    const {value} = this.props;
+    const { value } = this.props;
 
     return (
       <div ref={this.target}>

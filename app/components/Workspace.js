@@ -1,7 +1,7 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 // noinspection ES6CheckImport
-import {DropTarget} from 'react-dnd';
+import { DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import ReactResizeDetector from 'react-resize-detector';
@@ -17,7 +17,12 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const {ipcRenderer} = window.require('electron');
+const { ipcRenderer } = window.require('electron');
+
+const defaultOpt = {
+  left: 20,
+  top: 20
+};
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -41,7 +46,7 @@ function collect(connect, monitor) {
   return {
     connectDropTarget: connect.dropTarget(),
     isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({shallow: true}),
+    isOverCurrent: monitor.isOver({ shallow: true }),
     canDrop: monitor.canDrop(),
     itemType: monitor.getItemType(),
     getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
@@ -105,7 +110,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {width, height}
+            $merge: { width, height }
           }
         }
       })
@@ -113,16 +118,16 @@ class Workspace extends Component<Props> {
   };
 
   getResourceInfo = id => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     return resources[id];
   };
 
   findResourceAt = (x, y) => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const ids = Object.keys(resources);
     for (let i = 0; i < ids.length; i += 1) {
       const key = ids[i];
-      const {left, top, width, height} = resources[key];
+      const { left, top, width, height } = resources[key];
       if (x > left && x < left + width && y > top && y < top + height) {
         return key;
       }
@@ -135,8 +140,51 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
-  onUnlink = (resId) => {
-    const {resources} = this.state;
+  createNested = (id, parentId, type) => {
+    const value = {};
+    value[Consts.FIELD_NAME_TYPE] = type;
+
+    const { resources } = this.state;
+    const parent = resources[parentId];
+
+    const opt = {};
+
+    if (parent != null) {
+      opt.left = parent.left + parent.width + 50;
+      opt.top = parent.top;
+    }
+
+    this.registerResource(id, type, value, opt, true);
+  };
+
+  retakeOrphan = (oldId, newId) => {
+    if (!oldId || !newId) {
+      return;
+    }
+
+    const { resources } = this.state;
+    const old = resources[oldId];
+
+    if (old == null || !old.orphan) {
+      log.warn(`Unable to retake target ${oldId} - not orphan`);
+      return;
+    }
+
+    this.setState(prevState =>
+      update(prevState, {
+        resources: {
+          $apply: function retake(obj) {
+            const copy = Object.assign({}, obj);
+            IdHelpers.replaceParent(copy, oldId, newId, false);
+            return copy;
+          }
+        }
+      })
+    );
+  };
+
+  makeOrphan = resId => {
+    const { resources } = this.state;
     const resValue = resources[resId];
     if (resValue == null) {
       return;
@@ -149,12 +197,9 @@ class Workspace extends Component<Props> {
         update(prevState, {
           resources: {
             $apply: function changeId(obj) {
-              const copy = Object.assign({}, obj)
-              const res = obj[resId];
-              delete copy[resId];
-              res.orphan = true;
-              copy[newId] = res;
-              return copy
+              const copy = Object.assign({}, obj);
+              IdHelpers.replaceParent(copy, resId, newId, true);
+              return copy;
             }
           }
         })
@@ -179,7 +224,9 @@ class Workspace extends Component<Props> {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
-      onUnlink: this.onUnlink
+      makeOrphan: this.makeOrphan,
+      createNested: this.createNested,
+      retakeOrphan: this.retakeOrphan
     };
   }
 
@@ -190,7 +237,7 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: {[key]: {$set: true}}
+        selected: { [key]: { $set: true } }
       })
     );
   }
@@ -207,7 +254,7 @@ class Workspace extends Component<Props> {
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: {selected: {}}
+        $set: { selected: {} }
       })
     );
   }
@@ -229,7 +276,7 @@ class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const {selected} = this.state;
+    const { selected } = this.state;
 
     const keys = Object.keys(selected);
 
@@ -245,9 +292,9 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           $apply: function removeResource(obj) {
-            const copy = Object.assign({}, obj)
+            const copy = Object.assign({}, obj);
             delete copy[resId];
-            return copy
+            return copy;
           }
         }
       })
@@ -256,19 +303,15 @@ class Workspace extends Component<Props> {
 
   registerResource(resId, type, res, opt, nested) {
     log.info(`Loading resource [${resId}] of type ${type}`);
+    const actualOpt = opt == null ? defaultOpt : opt;
 
-    this.disassembleResource(resId, type, res, opt);
+    this.disassembleResource(resId, type, res, actualOpt);
 
-    let leftPos = 20;
-    let topPos = 20;
+    const { left, top } = actualOpt;
+    const leftPos = left == null ? 20 : left;
+    const topPos = top == null ? 20 : top;
 
-    if (opt != null && opt.pos != null) {
-      const {left, top} = opt.pos;
-      leftPos = left;
-      topPos = top;
-    }
-
-    const {resources} = this.state;
+    const { resources } = this.state;
     let entry = resources[resId];
     if (!entry) {
       entry = {};
@@ -284,13 +327,13 @@ class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: {[resId]: {$set: entry}}
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
 
   disassembleResource(resId, type, res, opt) {
-    const {schemas} = this.state;
+    const { schemas } = this.state;
     const schema = schemas[type];
 
     if (schema == null) {
@@ -302,9 +345,12 @@ class Workspace extends Component<Props> {
       return;
     }
 
+    const optClone = JsonUtils.clone(opt);
+    optClone.left += 400;
+
     Object.keys(schema.properties).forEach(name => {
       const prop = schema.properties[name];
-      if (prop.type !== "object") {
+      if (prop.type !== 'object') {
         return;
       }
 
@@ -314,15 +360,22 @@ class Workspace extends Component<Props> {
       }
 
       const id = IdHelpers.getNestedId(resId, name);
-
       res[name] = id;
 
-      this.registerResource(id, value[Consts.FIELD_NAME_TYPE], value, opt, true);
+      this.registerResource(
+        id,
+        value[Consts.FIELD_NAME_TYPE],
+        value,
+        optClone,
+        true
+      );
+      optClone.top += 200;
     });
   }
 
   assembleResource(resId, res) {
-    const {schemas, resources} = this.state;
+    log.silly(`Assembling ${resId}`);
+    const { schemas, resources } = this.state;
     const type = res[Consts.FIELD_NAME_TYPE];
     const schema = schemas[type];
 
@@ -339,7 +392,7 @@ class Workspace extends Component<Props> {
 
     Object.keys(schema.properties).forEach(name => {
       const prop = schema.properties[name];
-      if (prop.type !== "object") {
+      if (prop.type !== 'object') {
         result[name] = res[name];
       }
 
@@ -359,7 +412,7 @@ class Workspace extends Component<Props> {
   }
 
   saveDirty() {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -374,7 +427,7 @@ class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -382,7 +435,7 @@ class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: {dirty: false}
+                $merge: { dirty: false }
               }
             }
           })
@@ -396,7 +449,7 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {left, top}
+            $merge: { left, top }
           }
         }
       })
@@ -404,7 +457,7 @@ class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -415,8 +468,8 @@ class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: {$merge: {[field]: fieldValue}},
-            errors: {$merge: {[field]: errors}}
+            value: { $merge: { [field]: fieldValue } },
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
@@ -429,7 +482,7 @@ class Workspace extends Component<Props> {
         update(prevState, {
           resources: {
             [parentId]: {
-              $merge: {dirty: true}
+              $merge: { dirty: true }
             }
           }
         })
@@ -438,16 +491,16 @@ class Workspace extends Component<Props> {
   }
 
   toggleDebugGeometry() {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     this.setState(prevState =>
       update(prevState, {
-        debugGeometry: {$set: !debugGeometry}
+        debugGeometry: { $set: !debugGeometry }
       })
     );
   }
 
   renderDebugTopology(resources) {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     if (!debugGeometry) {
       return null;
     }
@@ -455,10 +508,10 @@ class Workspace extends Component<Props> {
     return (
       <svg style={Object.assign({}, styles)}>
         {Object.keys(resources).map(key => {
-          const {left, top, width, height} = resources[key];
+          const { left, top, width, height } = resources[key];
           return (
             <path
-              style={{zIndex: 5}}
+              style={{ zIndex: 5 }}
               key={`debug-${key}`}
               d={`M ${left} ${top} L ${left + width} ${top + height}`}
               stroke="red"
@@ -472,12 +525,12 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const {connectDropTarget} = this.props;
-    const {resources, schemas, selected, renderContext} = this.state;
+    const { connectDropTarget } = this.props;
+    const { resources, schemas, selected, renderContext } = this.state;
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    log.silly(resources);
+    // log.silly(resources);
     // log.silly(selected);
 
     return connectDropTarget(
@@ -491,7 +544,16 @@ class Workspace extends Component<Props> {
           role="presentation"
         >
           {Object.keys(resources).map(key => {
-            const {left, top, value, type, dirty, errors, nested, orphan} = resources[key];
+            const {
+              left,
+              top,
+              value,
+              type,
+              dirty,
+              errors,
+              nested,
+              orphan
+            } = resources[key];
             const schema = schemas[type];
 
             if (schema == null) {
