@@ -10,12 +10,19 @@ import ResourceForm from './ResourceForm';
 
 import Dragable from './Dragable';
 
+import * as IdHelpers from '../js/id-helpers';
+import * as JsonUtils from '../js/js-utils';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
 const { ipcRenderer } = window.require('electron');
+
+const defaultOpt = {
+  left: 20,
+  top: 20
+};
 
 type Props = {
   connectDropTarget: PropTypes.object
@@ -76,7 +83,10 @@ class Workspace extends Component<Props> {
   componentDidMount() {
     const selfThis = this;
     ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res, options) => {
-      selfThis.addResource(res, options);
+      const type = res[Consts.FIELD_NAME_TYPE];
+      const resId = res[Consts.FIELD_NAME_ID];
+
+      selfThis.registerResource(resId, type, res, options);
     });
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
@@ -130,6 +140,73 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
+  createNested = (id, parentId, type) => {
+    const value = {};
+    value[Consts.FIELD_NAME_TYPE] = type;
+
+    const { resources } = this.state;
+    const parent = resources[parentId];
+
+    const opt = {};
+
+    if (parent != null) {
+      opt.left = parent.left + parent.width + 50;
+      opt.top = parent.top;
+    }
+
+    this.registerResource(id, type, value, opt, true);
+  };
+
+  retakeOrphan = (oldId, newId) => {
+    if (!oldId || !newId) {
+      return;
+    }
+
+    const { resources } = this.state;
+    const old = resources[oldId];
+
+    if (old == null || !old.orphan) {
+      log.warn(`Unable to retake target ${oldId} - not orphan`);
+      return;
+    }
+
+    this.setState(prevState =>
+      update(prevState, {
+        resources: {
+          $apply: function retake(obj) {
+            const copy = Object.assign({}, obj);
+            IdHelpers.replaceParent(copy, oldId, newId, false);
+            return copy;
+          }
+        }
+      })
+    );
+  };
+
+  makeOrphan = resId => {
+    const { resources } = this.state;
+    const resValue = resources[resId];
+    if (resValue == null) {
+      return;
+    }
+
+    if (resValue.nested) {
+      const newId = JsonUtils.generateUUID();
+
+      this.setState(prevState =>
+        update(prevState, {
+          resources: {
+            $apply: function changeId(obj) {
+              const copy = Object.assign({}, obj);
+              IdHelpers.replaceParent(copy, resId, newId, true);
+              return copy;
+            }
+          }
+        })
+      );
+    }
+  };
+
   resetWorkspace(schemas) {
     log.info(`Loading schemas: ${Object.keys(schemas)}`);
 
@@ -146,7 +223,10 @@ class Workspace extends Component<Props> {
     return {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
-      loadResourceById: this.loadResourceById
+      loadResourceById: this.loadResourceById,
+      makeOrphan: this.makeOrphan,
+      createNested: this.createNested,
+      retakeOrphan: this.retakeOrphan
     };
   }
 
@@ -196,41 +276,40 @@ class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const { selected, resources } = this.state;
+    const { selected } = this.state;
 
-    const newResources = {};
-    const keys = Object.keys(resources);
+    const keys = Object.keys(selected);
 
     for (let i = 0; i < keys.length; i += 1) {
-      const key = keys[i];
-      if (!selected[key]) {
-        newResources[key] = resources[key];
-      }
+      this.removeResource(keys[i]);
     }
 
+    this.resetSelected();
+  }
+
+  removeResource(resId) {
     this.setState(prevState =>
       update(prevState, {
-        $set: {
-          resources: newResources,
-          selected: {}
+        resources: {
+          $apply: function removeResource(obj) {
+            const copy = Object.assign({}, obj);
+            delete copy[resId];
+            return copy;
+          }
         }
       })
     );
   }
 
-  addResource(res, opt) {
-    const resId = res[Consts.FIELD_NAME_ID];
-    const type = res[Consts.FIELD_NAME_TYPE];
+  registerResource(resId, type, res, opt, nested) {
     log.info(`Loading resource [${resId}] of type ${type}`);
+    const actualOpt = opt == null ? defaultOpt : opt;
 
-    let leftPos = 20;
-    let topPos = 20;
+    this.disassembleResource(resId, type, res, actualOpt);
 
-    if (opt != null && opt.pos != null) {
-      const { left, top } = opt.pos;
-      leftPos = left;
-      topPos = top;
-    }
+    const { left, top } = actualOpt;
+    const leftPos = left == null ? 20 : left;
+    const topPos = top == null ? 20 : top;
 
     const { resources } = this.state;
     let entry = resources[resId];
@@ -240,11 +319,11 @@ class Workspace extends Component<Props> {
 
     entry.top = topPos;
     entry.left = leftPos;
-    entry.title = resId;
     entry.value = res;
     entry.errors = {};
     entry.dirty = false;
     entry.type = type;
+    entry.nested = nested;
 
     this.setState(prevState =>
       update(prevState, {
@@ -253,14 +332,95 @@ class Workspace extends Component<Props> {
     );
   }
 
+  disassembleResource(resId, type, res, opt) {
+    const { schemas } = this.state;
+    const schema = schemas[type];
+
+    if (schema == null) {
+      log.error(`Unable to find schema for type: ${type}`);
+      return;
+    }
+
+    if (schema.properties == null) {
+      return;
+    }
+
+    const optClone = JsonUtils.clone(opt);
+    optClone.left += 400;
+
+    Object.keys(schema.properties).forEach(name => {
+      const prop = schema.properties[name];
+      if (prop.type !== 'object') {
+        return;
+      }
+
+      const value = res[name];
+      if (value == null) {
+        return;
+      }
+
+      const id = IdHelpers.getNestedId(resId, name);
+      res[name] = id;
+
+      this.registerResource(
+        id,
+        value[Consts.FIELD_NAME_TYPE],
+        value,
+        optClone,
+        true
+      );
+      optClone.top += 200;
+    });
+  }
+
+  assembleResource(resId, res) {
+    log.silly(`Assembling ${resId}`);
+    const { schemas, resources } = this.state;
+    const type = res[Consts.FIELD_NAME_TYPE];
+    const schema = schemas[type];
+
+    if (schema == null) {
+      log.error(`Unable to find schema for type: ${type}`);
+      return null;
+    }
+
+    if (schema.properties == null) {
+      return res;
+    }
+
+    const result = JsonUtils.clone(res);
+
+    Object.keys(schema.properties).forEach(name => {
+      const prop = schema.properties[name];
+      if (prop.type !== 'object') {
+        result[name] = res[name];
+      }
+
+      const value = res[name];
+      if (value == null) {
+        return;
+      }
+
+      const id = IdHelpers.getNestedId(resId, name);
+      const actualValue = resources[id];
+      if (actualValue != null) {
+        result[name] = this.assembleResource(id, actualValue.value);
+      }
+    });
+
+    return result;
+  }
+
   saveDirty() {
     const { resources } = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
-      if (res.dirty) {
-        result[key] = res.value;
+      if (!res.dirty || res.nested) {
+        return;
       }
+
+      result[key] = this.assembleResource(key, res.value);
     });
 
     ipcRenderer.send(Events.WORKSPACE_SAVE_ALL_DIRTY, result);
@@ -316,10 +476,12 @@ class Workspace extends Component<Props> {
     );
 
     if (!skipDirty) {
+      const parentId = IdHelpers.getParentId(resId);
+
       this.setState(prevState =>
         update(prevState, {
           resources: {
-            [resId]: {
+            [parentId]: {
               $merge: { dirty: true }
             }
           }
@@ -381,64 +543,79 @@ class Workspace extends Component<Props> {
           tabIndex="-1" /* required for proper KeyDown */
           role="presentation"
         >
-          <div>
-            {Object.keys(resources).map(key => {
-              const { left, top, value, type, dirty, errors } = resources[key];
-              const schema = schemas[type];
-              const isSelected = selected[key];
+          {Object.keys(resources).map(key => {
+            const {
+              left,
+              top,
+              value,
+              type,
+              dirty,
+              errors,
+              nested,
+              orphan
+            } = resources[key];
+            const schema = schemas[type];
 
-              const selfThis = this;
-              const onChange = function changeWrapper(
+            if (schema == null) {
+              log.error(`Unable to fine schema for type: ${type}`);
+              return;
+            }
+
+            const isSelected = selected[key];
+
+            const selfThis = this;
+            const onChange = function changeWrapper(
+              fieldId,
+              fieldValue,
+              fieldErrors,
+              skipDirty
+            ) {
+              selfThis.onDataChange(
+                key,
                 fieldId,
                 fieldValue,
                 fieldErrors,
                 skipDirty
-              ) {
-                selfThis.onDataChange(
-                  key,
-                  fieldId,
-                  fieldValue,
-                  fieldErrors,
-                  skipDirty
-                );
-              };
-
-              const resizeCallback = (width, height) => {
-                this.registerSize(key, width, height);
-              };
-
-              const name = value[Consts.FIELD_NAME_NAME];
-
-              return (
-                <Dragable
-                  key={key}
-                  id={key}
-                  left={left}
-                  top={top}
-                  connectDragSource=""
-                  isDragging="false"
-                >
-                  <ReactResizeDetector
-                    handleWidth
-                    handleHeight
-                    onResize={resizeCallback}
-                  >
-                    <ResourceForm
-                      schema={schema}
-                      data={value}
-                      name={name}
-                      dirty={dirty}
-                      onChange={onChange}
-                      resId={key}
-                      selected={isSelected}
-                      errors={errors}
-                      renderContext={renderContext}
-                    />
-                  </ReactResizeDetector>
-                </Dragable>
               );
-            })}
-          </div>
+            };
+
+            const resizeCallback = (width, height) => {
+              this.registerSize(key, width, height);
+            };
+
+            const name = value[Consts.FIELD_NAME_NAME];
+
+            return (
+              <Dragable
+                key={key}
+                id={key}
+                left={left}
+                top={top}
+                connectDragSource=""
+                isDragging="false"
+              >
+                <ReactResizeDetector
+                  handleWidth
+                  handleHeight
+                  onResize={resizeCallback}
+                >
+                  <ResourceForm
+                    schema={schema}
+                    data={value}
+                    name={name}
+                    dirty={dirty}
+                    onChange={onChange}
+                    resId={key}
+                    selected={isSelected}
+                    errors={errors}
+                    renderContext={renderContext}
+                    nested={nested}
+                    orphan={orphan}
+                  />
+                </ReactResizeDetector>
+              </Dragable>
+            );
+          })}
           <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
         </div>
       </div>
