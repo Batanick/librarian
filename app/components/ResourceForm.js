@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -13,6 +13,8 @@ import * as Validators from './custom-inputs/validators';
 import ResourceRef from './custom-inputs/ResourceRef';
 
 import * as Consts from '../constants/constants';
+import {ArrowDown, ArrowUp, Plus, X} from "@githubprimer/octicons-react";
+import ArrayField from "./custom-inputs/ArrayField";
 
 const log = require('electron-log');
 
@@ -40,11 +42,17 @@ export default class ResourceForm extends Component<Props> {
   }
 
   renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange, renderContext, resId } = this.props;
+    const {onChange, renderContext, resId} = this.props;
 
-    const { type } = fieldInfo;
+    const {type} = fieldInfo;
 
     switch (type) {
+      case 'array' :
+        return (
+          <ArrayField
+
+          />
+        );
       case 'string':
         return (
           <StringField
@@ -122,12 +130,12 @@ export default class ResourceForm extends Component<Props> {
   }
 
   getTypeName = () => {
-    const { schema } = this.props;
+    const {schema} = this.props;
     return schema[Consts.FIELD_NAME_ID];
   };
 
-  renderHeader() {
-    const { name, resId, dirty, nested } = this.props;
+  renderHeader = () => {
+    const {name, resId, dirty, nested} = this.props;
     const typeName = this.getTypeName();
     if (nested) {
       return (
@@ -146,9 +154,8 @@ export default class ResourceForm extends Component<Props> {
   }
 
   render() {
+    const {schema, data, selected, errors, nested, orphan} = this.props;
     // log.silly(`Rendering: ${resId}`);
-
-    const { schema, data, selected, errors, nested, orphan } = this.props;
 
     let border = 'info';
     if (selected) {
@@ -162,7 +169,7 @@ export default class ResourceForm extends Component<Props> {
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px' }}
+        style={{borderWidth: '2px'}}
         border={border}
         role="presentation"
       >
