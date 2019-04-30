@@ -41,7 +41,8 @@ export default class ArrayField extends Component<Props> {
     return (
       <div>
         <Row>
-          <Col>
+          <Col/>
+          <Col md="auto">
             <h6 className="card-subtitle text-muted">3/10</h6>
           </Col>
           <Col md="auto">
