@@ -42,13 +42,11 @@ export default class ArrayField extends Component<Props> {
       <div>
         <Row>
           <Col>
-            <label>
-              3/5
-            </label>
+            <h6 className="card-subtitle text-muted">3/10</h6>
           </Col>
           <Col md="auto">
             <Button
-              variant="secondary"
+              variant="outline-secondary"
               size="sm"
               onClick={() => this.setState({open: !open})}
               aria-controls="example-collapse-text"

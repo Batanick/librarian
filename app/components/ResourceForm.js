@@ -151,7 +151,7 @@ export default class ResourceForm extends Component<Props> {
         <h6 className="card-subtitle text-muted">{resId}</h6>
       </Card.Header>
     );
-  }
+  };
 
   render() {
     const {schema, data, selected, errors, nested, orphan} = this.props;
