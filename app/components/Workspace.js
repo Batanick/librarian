@@ -1,14 +1,11 @@
 // @flow
 import React, { Component } from 'react';
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
-import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import ReactResizeDetector from 'react-resize-detector';
+import Draggable from 'react-draggable';
 
 import ResourceForm from './ResourceForm';
-
-import Dragable from './Dragable';
 
 import * as IdHelpers from '../js/id-helpers';
 import * as JsonUtils from '../js/js-utils';
@@ -24,9 +21,7 @@ const defaultOpt = {
   top: 20
 };
 
-type Props = {
-  connectDropTarget: PropTypes.object
-};
+type Props = {};
 
 const styles = {
   position: 'relative',
@@ -42,30 +37,7 @@ const scrollableStyles = {
   position: 'absolute'
 };
 
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
-    canDrop: monitor.canDrop(),
-    itemType: monitor.getItemType(),
-    getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
-  };
-}
-
-// noinspection JSUnusedGlobalSymbols
-const target = {
-  drop(props, monitor, component) {
-    const item = monitor.getItem();
-    const delta = monitor.getDifferenceFromInitialOffset();
-    const left = Math.round(item.left + delta.x);
-    const top = Math.round(item.top + delta.y);
-
-    component.moveChild(item.id, left, top);
-  }
-};
-
-class Workspace extends Component<Props> {
+export default class Workspace extends Component<Props> {
   props: Props;
 
   constructor(...args) {
@@ -525,7 +497,6 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
     const { resources, schemas, selected, renderContext } = this.state;
 
     // log.silly('rendering workspace');
@@ -533,7 +504,7 @@ class Workspace extends Component<Props> {
     // log.silly(resources);
     // log.silly(selected);
 
-    return connectDropTarget(
+    return (
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div
           id="workspace"
@@ -586,34 +557,36 @@ class Workspace extends Component<Props> {
             const name = value[Consts.FIELD_NAME_NAME];
 
             return (
-              <Dragable
+              <Draggable
                 key={key}
                 id={key}
-                left={left}
-                top={top}
-                connectDragSource=""
-                isDragging="false"
+                position={{ x: left, y: top }}
+                onDrag={(evt, data) => {
+                  this.moveChild(key, data.x, data.y);
+                }}
               >
-                <ReactResizeDetector
-                  handleWidth
-                  handleHeight
-                  onResize={resizeCallback}
-                >
-                  <ResourceForm
-                    schema={schema}
-                    data={value}
-                    name={name}
-                    dirty={dirty}
-                    onChange={onChange}
-                    resId={key}
-                    selected={isSelected}
-                    errors={errors}
-                    renderContext={renderContext}
-                    nested={nested}
-                    orphan={orphan}
-                  />
-                </ReactResizeDetector>
-              </Dragable>
+                <div style={{ position: 'absolute' }}>
+                  <ReactResizeDetector
+                    handleWidth
+                    handleHeight
+                    onResize={resizeCallback}
+                  >
+                    <ResourceForm
+                      schema={schema}
+                      data={value}
+                      name={name}
+                      dirty={dirty}
+                      onChange={onChange}
+                      resId={key}
+                      selected={isSelected}
+                      errors={errors}
+                      renderContext={renderContext}
+                      nested={nested}
+                      orphan={orphan}
+                    />
+                  </ReactResizeDetector>
+                </div>
+              </Draggable>
             );
           })}
           <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
@@ -622,5 +595,3 @@ class Workspace extends Component<Props> {
     );
   }
 }
-
-export default DropTarget('resource', target, collect)(Workspace);
