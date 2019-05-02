@@ -564,6 +564,7 @@ export default class Workspace extends Component<Props> {
                 onDrag={(evt, data) => {
                   this.moveChild(key, data.x, data.y);
                 }}
+                enableUserSelectHack={false} // https://github.com/mzabriskie/react-draggable/issues/315
               >
                 <div style={{ position: 'absolute' }}>
                   <ReactResizeDetector
