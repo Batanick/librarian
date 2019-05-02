@@ -5,16 +5,7 @@
         "$type": "NestingSchema",
         "firstName": "1",
         "nested": {
-            "$type": "NestingSchema",
-            "firstName": "2",
-            "nested": {
-                "$type": "NestingSchema",
-                "firstName": "3",
-                "nested": {
-                    "$type": "NestingSchema",
-                    "firstName": "4"
-                }
-            }
+            "$type": "NestingSchema"
         }
     }
 }

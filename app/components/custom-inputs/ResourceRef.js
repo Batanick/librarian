@@ -111,8 +111,15 @@ export default class ResourceRef extends Component<Props> {
       log.warn('No connector coordinates');
       return null;
     }
+
     const box = current.getBoundingClientRect();
-    return { x: box.right + 10, y: box.top + box.height / 2 };
+    const scrollable = document.getElementById('scrollableWorkspace');
+    log.error();
+
+    return {
+      x: box.right + 10 + scrollable.scrollLeft,
+      y: box.top + scrollable.scrollTop + box.height / 2
+    };
   }
 
   loadResource = resId => {

@@ -33,7 +33,7 @@ const svgStyles = {
 
 export default class SvgConnector extends Component<Props> {
   render() {
-    const target = document.getElementById('workspace');
+    const target = document.getElementById('scrollableWorkspace');
     const { start, finish } = this.props;
 
     const path = SvgUtils.BuildSvgPath(start.x, start.y, finish.x, finish.y);
