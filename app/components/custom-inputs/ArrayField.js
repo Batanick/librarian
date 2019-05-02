@@ -9,7 +9,6 @@ import Button from "react-bootstrap/Button";
 import Octicon from "@githubprimer/octicons-react";
 import Row from "react-bootstrap/Row";
 import Collapse from "react-bootstrap/Collapse";
-import Form from "../ResourceForm";
 
 // const log = require('electron-log');
 
@@ -40,10 +39,10 @@ export default class ArrayField extends Component<Props> {
     const {open} = this.state;
     return (
       <div>
-        <Row>
+        <Row noGutters>
           <Col/>
           <Col md="auto">
-            <h6 className="card-subtitle text-muted">3/10</h6>
+            <label className="p-1 text-muted">3/10</label>
           </Col>
           <Col md="auto">
             <Button
