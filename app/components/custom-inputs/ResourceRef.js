@@ -114,7 +114,6 @@ export default class ResourceRef extends Component<Props> {
 
     const box = current.getBoundingClientRect();
     const scrollable = document.getElementById('scrollableWorkspace');
-    log.error();
 
     return {
       x: box.right + 10 + scrollable.scrollLeft,
