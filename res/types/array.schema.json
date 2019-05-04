@@ -11,6 +11,22 @@
         "default": "Chucccck"
       },
       "title": "Array example"
+    },
+    "nesting_ref_array": {
+      "type": "array",
+      "elements": {
+        "type": "object",
+        "allowedTypes": ["NestingSchema"]
+      },
+      "title": "Nesting references"
+    },
+    "ref_array": {
+      "type": "array",
+      "elements": {
+        "type": "ref",
+        "allowedTypes": ["SimpleSchema"]
+      },
+      "title": "References"
     }
   }
 }
