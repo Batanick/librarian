@@ -4,22 +4,13 @@
   "description": "A simple form example.",
   "type": "object",
   "properties": {
-    "firstName": {
+    "string_array": {
       "type": "array",
-      "elements": "string",
-      "title": "First name",
-      "default": "Chucccck"
-    },
-    "lastName": {
-      "type": "array",
-      "elements": "string",
-      "title": "Last name"
-    },
-    "nested": {
-      "type": "array",
-      "elements": "object",
-      "title": "Reference",
-      "allowedTypes": ["NestingSchema"]
+      "elements": {
+        "type": "string",
+        "default": "Chucccck"
+      },
+      "title": "Array example"
     }
   }
 }
