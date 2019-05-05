@@ -341,6 +341,7 @@ export default class Workspace extends Component<Props> {
       const prop = schema.properties[name];
       if (prop.type !== 'object') {
         result[name] = res[name];
+        return;
       }
 
       const value = res[name];
