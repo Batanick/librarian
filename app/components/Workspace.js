@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 // noinspection ES6CheckImport
 import update from 'immutability-helper';
 import ReactResizeDetector from 'react-resize-detector';
@@ -13,7 +13,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const {ipcRenderer} = window.require('electron');
+const { ipcRenderer } = window.require('electron');
 
 const defaultOpt = {
   left: 20,
@@ -81,7 +81,7 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {width, height}
+            $merge: { width, height }
           }
         }
       })
@@ -89,16 +89,16 @@ export default class Workspace extends Component<Props> {
   };
 
   getResourceInfo = id => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     return resources[id];
   };
 
   findResourceAt = (x, y) => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const ids = Object.keys(resources);
     for (let i = 0; i < ids.length; i += 1) {
       const key = ids[i];
-      const {left, top, width, height} = resources[key];
+      const { left, top, width, height } = resources[key];
       if (x > left && x < left + width && y > top && y < top + height) {
         return key;
       }
@@ -112,7 +112,7 @@ export default class Workspace extends Component<Props> {
   };
 
   createNested = (parentId, type, value) => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const parent = resources[parentId];
 
     const opt = {};
@@ -165,7 +165,7 @@ export default class Workspace extends Component<Props> {
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
       changeParent: this.changeParent,
-      createNested: this.createNested,
+      createNested: this.createNested
     };
   }
 
@@ -176,7 +176,7 @@ export default class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: {[key]: {$set: true}}
+        selected: { [key]: { $set: true } }
       })
     );
   }
@@ -193,7 +193,7 @@ export default class Workspace extends Component<Props> {
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: {selected: {}}
+        $set: { selected: {} }
       })
     );
   }
@@ -215,7 +215,7 @@ export default class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const {selected} = this.state;
+    const { selected } = this.state;
 
     const keys = Object.keys(selected);
 
@@ -253,11 +253,11 @@ export default class Workspace extends Component<Props> {
 
     this.disassembleResource(resId, type, res, actualOpt);
 
-    const {left, top} = actualOpt;
+    const { left, top } = actualOpt;
     const leftPos = left == null ? 20 : left;
     const topPos = top == null ? 20 : top;
 
-    const {resources} = this.state;
+    const { resources } = this.state;
     let entry = resources[resId];
     if (!entry) {
       entry = {};
@@ -277,13 +277,13 @@ export default class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: {[resId]: {$set: entry}}
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
 
   disassembleResource(resId, type, res, opt) {
-    const {schemas} = this.state;
+    const { schemas } = this.state;
     const schema = schemas[type];
 
     if (schema == null) {
@@ -322,7 +322,7 @@ export default class Workspace extends Component<Props> {
 
   assembleResource(resId, res) {
     log.silly(`Assembling ${resId}`);
-    const {schemas, resources} = this.state;
+    const { schemas, resources } = this.state;
     const type = res[Consts.FIELD_NAME_TYPE];
     const schema = schemas[type];
 
@@ -348,10 +348,9 @@ export default class Workspace extends Component<Props> {
         return;
       }
 
-      const id = IdHelpers.getNestedId(resId, name);
-      const actualValue = resources[id];
+      const actualValue = resources[value];
       if (actualValue != null) {
-        result[name] = this.assembleResource(id, actualValue.value);
+        result[name] = this.assembleResource(value, actualValue.value);
       }
     });
 
@@ -359,7 +358,7 @@ export default class Workspace extends Component<Props> {
   }
 
   saveDirty() {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -374,7 +373,7 @@ export default class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -382,7 +381,7 @@ export default class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: {dirty: false}
+                $merge: { dirty: false }
               }
             }
           })
@@ -396,7 +395,7 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {left, top}
+            $merge: { left, top }
           }
         }
       })
@@ -404,7 +403,7 @@ export default class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -415,8 +414,8 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: {$merge: {[field]: fieldValue}},
-            errors: {$merge: {[field]: errors}}
+            value: { $merge: { [field]: fieldValue } },
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
@@ -435,14 +434,14 @@ export default class Workspace extends Component<Props> {
       if (current == null) {
         break;
       }
-      
+
       const resToUpdate = currentId;
       if (!current.nested) {
         this.setState(prevState =>
           update(prevState, {
             resources: {
               [resToUpdate]: {
-                $merge: {dirty: true}
+                $merge: { dirty: true }
               }
             }
           })
@@ -451,21 +450,20 @@ export default class Workspace extends Component<Props> {
       }
 
       currentId = current.parent;
-
     } while (currentId != null);
   }
 
   toggleDebugGeometry() {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     this.setState(prevState =>
       update(prevState, {
-        debugGeometry: {$set: !debugGeometry}
+        debugGeometry: { $set: !debugGeometry }
       })
     );
   }
 
   renderDebugTopology(resources) {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     if (!debugGeometry) {
       return null;
     }
@@ -473,10 +471,10 @@ export default class Workspace extends Component<Props> {
     return (
       <svg style={Object.assign({}, styles)}>
         {Object.keys(resources).map(key => {
-          const {left, top, width, height} = resources[key];
+          const { left, top, width, height } = resources[key];
           return (
             <path
-              style={{zIndex: 5}}
+              style={{ zIndex: 5 }}
               key={`debug-${key}`}
               d={`M ${left} ${top} L ${left + width} ${top + height}`}
               stroke="red"
@@ -490,7 +488,7 @@ export default class Workspace extends Component<Props> {
   }
 
   render() {
-    const {resources, schemas, selected, renderContext} = this.state;
+    const { resources, schemas, selected, renderContext } = this.state;
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
@@ -554,13 +552,13 @@ export default class Workspace extends Component<Props> {
               <Draggable
                 key={key}
                 id={key}
-                position={{x: left, y: top}}
+                position={{ x: left, y: top }}
                 onDrag={(evt, data) => {
                   this.moveChild(key, data.x, data.y);
                 }}
                 enableUserSelectHack={false} // https://github.com/mzabriskie/react-draggable/issues/315
               >
-                <div style={{position: 'absolute'}}>
+                <div style={{ position: 'absolute' }}>
                   <ReactResizeDetector
                     handleWidth
                     handleHeight
