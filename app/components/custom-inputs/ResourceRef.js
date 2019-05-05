@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import Button from 'react-bootstrap/Button';
@@ -44,9 +44,9 @@ const labelStyles = {
 
 export default class ResourceRef extends Component<Props> {
   static calculateConnector(target, resourceInfo) {
-    const {current} = target;
+    const { current } = target;
     if (current == null) {
-      log.warn("Unable to calculate connector");
+      log.warn('Unable to calculate connector');
       return null;
     }
 
@@ -71,7 +71,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   componentDidUpdate() {
-    const {value, reference, resourceId, id, renderContext} = this.props;
+    const { value, reference, resourceId, id, renderContext } = this.props;
     if (!reference) {
       if (value) {
         // if value resource disappeared - updating
@@ -114,33 +114,34 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    log.error(JSON.stringify(connector));
-
-    const {left, top, height} = targetInfo;
+    const { left, top, height } = targetInfo;
     if (!left || !top || !height) {
       return null;
     }
 
     return (
       <SvgConnector
-        start={{x: connector.x, y: connector.y}}
-        finish={{x: left, y: top + height / 2}}
+        start={{ x: connector.x, y: connector.y }}
+        finish={{ x: left, y: top + height / 2 }}
       />
     );
   }
 
   getConnector() {
-    const {renderContext, resourceId, overridingConnector} = this.props;
+    const { renderContext, resourceId, overridingConnector } = this.props;
 
     if (overridingConnector != null) {
       return overridingConnector;
     }
 
-    return ResourceRef.calculateConnector(this.target, renderContext.getResourceInfo(resourceId));
+    return ResourceRef.calculateConnector(
+      this.target,
+      renderContext.getResourceInfo(resourceId)
+    );
   }
 
   loadResource = resId => {
-    const {renderContext, resourceId} = this.props;
+    const { renderContext, resourceId } = this.props;
     const opt = {};
 
     const selfInfo = renderContext.getResourceInfo(resourceId);
@@ -159,7 +160,7 @@ export default class ResourceRef extends Component<Props> {
   onStartSelect = () => {
     this.setState(prevState =>
       update(prevState, {
-        selecting: {$set: true}
+        selecting: { $set: true }
       })
     );
   };
@@ -167,7 +168,7 @@ export default class ResourceRef extends Component<Props> {
   onCreateNew = () => {
     this.setState(prevState =>
       update(prevState, {
-        creatingNew: {$set: true}
+        creatingNew: { $set: true }
       })
     );
   };
@@ -184,7 +185,7 @@ export default class ResourceRef extends Component<Props> {
   onSelectCancel = () => {
     this.setState(prevState =>
       update(prevState, {
-        selecting: {$set: false}
+        selecting: { $set: false }
       })
     );
   };
@@ -192,7 +193,7 @@ export default class ResourceRef extends Component<Props> {
   onCreateCancel = () => {
     this.setState(prevState =>
       update(prevState, {
-        creatingNew: {$set: false}
+        creatingNew: { $set: false }
       })
     );
   };
@@ -203,7 +204,7 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    const {renderContext, resourceId} = this.props;
+    const { renderContext, resourceId } = this.props;
 
     const value = {
       [Consts.FIELD_NAME_TYPE]: type
@@ -213,7 +214,7 @@ export default class ResourceRef extends Component<Props> {
   };
 
   canConnect = (x, y) => {
-    const {renderContext, fieldInfo, resourceId, reference} = this.props;
+    const { renderContext, fieldInfo, resourceId, reference } = this.props;
 
     const resId = renderContext.findResourceAt(x, y);
     if (!resId || resourceId === resId) {
@@ -233,7 +234,7 @@ export default class ResourceRef extends Component<Props> {
       return null;
     }
 
-    const {allowedTypes} = fieldInfo;
+    const { allowedTypes } = fieldInfo;
     const schemaId = resource.type;
     if (!allowedTypes || !allowedTypes.includes(schemaId)) {
       return null;
@@ -243,7 +244,7 @@ export default class ResourceRef extends Component<Props> {
   };
 
   renderSelectOverlay() {
-    const {selecting} = this.state;
+    const { selecting } = this.state;
     if (!selecting) {
       return;
     }
@@ -260,13 +261,13 @@ export default class ResourceRef extends Component<Props> {
   }
 
   renderTypeSelect() {
-    const {creatingNew} = this.state;
+    const { creatingNew } = this.state;
     if (!creatingNew) {
       return;
     }
 
-    const {fieldInfo} = this.props;
-    let {allowedTypes} = fieldInfo;
+    const { fieldInfo } = this.props;
+    let { allowedTypes } = fieldInfo;
     if (!allowedTypes) {
       allowedTypes = [];
     }
@@ -284,7 +285,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   renderField() {
-    const {value, renderContext} = this.props;
+    const { value, renderContext } = this.props;
 
     if (value == null) {
       return (
@@ -293,13 +294,13 @@ export default class ResourceRef extends Component<Props> {
             className="btn btn-secondary btn-sm"
             onClick={() => this.onCreateNew()}
           >
-            <Octicon size="small" icon={Plus}/>
+            <Octicon size="small" icon={Plus} />
           </Button>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.onStartSelect()}
           >
-            <Octicon size="small" icon={FileSymlinkFile}/>
+            <Octicon size="small" icon={FileSymlinkFile} />
           </Button>
           {this.renderSelectOverlay()}
           {this.renderTypeSelect()}
@@ -315,13 +316,13 @@ export default class ResourceRef extends Component<Props> {
             className="btn btn-secondary btn-sm"
             onClick={() => this.deleteRef(value)}
           >
-            <Octicon size="small" icon={X}/>
+            <Octicon size="small" icon={X} />
           </Button>
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.loadResource(value)}
           >
-            <Octicon size="small" icon={Eye}/>
+            <Octicon size="small" icon={Eye} />
           </Button>
         </div>
       );
@@ -333,7 +334,7 @@ export default class ResourceRef extends Component<Props> {
           className="btn btn-secondary btn-sm"
           onClick={() => this.deleteRef(value)}
         >
-          <Octicon size="small" icon={X}/>
+          <Octicon size="small" icon={X} />
         </Button>
         {this.renderLink(info)}
       </div>
@@ -341,7 +342,7 @@ export default class ResourceRef extends Component<Props> {
   }
 
   render() {
-    const {value} = this.props;
+    const { value } = this.props;
 
     return (
       <div ref={this.target}>

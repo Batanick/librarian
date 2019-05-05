@@ -101,6 +101,7 @@ export default function renderInput(
           renderContext={renderContext}
           fieldInfo={fieldInfo}
           reference={false}
+          overridingConnector={overridingConnector}
         />
       );
 
