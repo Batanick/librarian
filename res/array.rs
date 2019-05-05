@@ -2,16 +2,19 @@
     "$id": "644233a1-2c07-40bb-8277-48b9d698f2ed",
     "$type": "ArraySchema",
     "nesting_ref_array": [
-        null,
         {
             "$type": "NestingSchema",
             "lastName": "fsdfsdd",
             "nested": {
                 "$type": "NestingSchema",
                 "firstName": "444",
-                "lastName": "444"
+                "lastName": "444",
+                "nested": {
+                    "$type": "NestingSchema"
+                }
             }
         },
+        null,
         null,
         {
             "$type": "NestingSchema",
