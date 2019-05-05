@@ -33,7 +33,8 @@ const scrollableStyles = {
   overflowX: 'scroll',
   maxHeight: '100%',
   maxWidth: '100%',
-  position: 'absolute'
+  position: 'absolute',
+  userSelect: 'none'
 };
 
 export default class Workspace extends Component<Props> {
@@ -111,20 +112,10 @@ export default class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
-  createNested = (parentId, type, value) => {
-    const { resources } = this.state;
-    const parent = resources[parentId];
-
-    const opt = {};
+  createNested = (parentId, type, value, opt) => {
     const id = JsonUtils.generateUUID();
 
-    if (parent != null) {
-      opt.left = parent.left + parent.width + 50;
-      opt.top = parent.top;
-    }
-
-    opt.parent = parentId;
-    this.registerResource(id, type, value, opt, true);
+    this.registerResource(id, type, value, opt, true, parentId);
     return id;
   };
 
@@ -247,7 +238,7 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  registerResource(resId, type, res, opt, nested) {
+  registerResource(resId, type, res, opt, nested, parentId) {
     log.info(`Loading resource [${resId}] of type ${type}`);
     const actualOpt = opt == null ? defaultOpt : opt;
 
@@ -264,7 +255,7 @@ export default class Workspace extends Component<Props> {
     }
 
     if (nested) {
-      entry.parent = opt.parent;
+      entry.parent = parentId;
     }
 
     entry.top = topPos;
@@ -311,7 +302,8 @@ export default class Workspace extends Component<Props> {
           log.error(`Unable to load resource of type: ${nestedType}`);
           return;
         }
-        res[name] = this.createNested(resId, nestedType, value);
+
+        res[name] = this.createNested(resId, nestedType, value, optClone);
         optClone.top += 200;
         return;
       }
@@ -331,7 +323,12 @@ export default class Workspace extends Component<Props> {
             if (nestedType == null || !schemas[nestedType]) {
               log.error(`Unable to load resource of type: ${nestedType}`);
             } else {
-              const nestedId = this.createNested(resId, nestedType, element);
+              const nestedId = this.createNested(
+                resId,
+                nestedType,
+                element,
+                optClone
+              );
               res[name].push(nestedId);
               optClone.top += 200;
             }
@@ -535,7 +532,7 @@ export default class Workspace extends Component<Props> {
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    log.silly(JSON.stringify(resources));
+    // log.silly(JSON.stringify(resources));
     // log.silly(selected);
 
     return (
