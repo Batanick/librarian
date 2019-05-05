@@ -338,21 +338,42 @@ export default class Workspace extends Component<Props> {
     const result = JsonUtils.clone(res);
 
     Object.keys(schema.properties).forEach(name => {
-      const prop = schema.properties[name];
-      if (prop.type !== 'object') {
-        result[name] = res[name];
-        return;
-      }
-
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const actualValue = resources[value];
-      if (actualValue != null) {
-        result[name] = this.assembleResource(value, actualValue.value);
+      const prop = schema.properties[name];
+      if (prop.type === 'object') {
+        const actualValue = resources[value];
+        if (actualValue != null) {
+          result[name] = this.assembleResource(value, actualValue.value);
+        }
+        return;
       }
+
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        result[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const elementId = value[i];
+          if (elementId == null) {
+            result[name].push(null);
+          } else {
+            const element = resources[elementId];
+            const assembled = this.assembleResource(elementId, element.value);
+            result[name].push(assembled);
+          }
+        }
+
+        return;
+      }
+
+      // other types
+      result[name] = res[name];
     });
 
     return result;
