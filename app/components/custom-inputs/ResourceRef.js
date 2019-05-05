@@ -130,7 +130,12 @@ export default class ResourceRef extends Component<Props> {
   }
 
   getConnector() {
-    const {renderContext, resourceId} = this.props;
+    const {renderContext, resourceId, overridingConnector} = this.props;
+
+    if (overridingConnector != null) {
+      return overridingConnector;
+    }
+
     return ResourceRef.calculateConnector(this.target, renderContext.getResourceInfo(resourceId));
   }
 
