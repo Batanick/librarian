@@ -68,7 +68,14 @@ export default class ResourceRef extends Component<Props> {
   }
 
   update = newValue => {
-    const { id, onChangeField, renderContext, value, reference } = this.props;
+    const {
+      id,
+      onChangeField,
+      renderContext,
+      resourceId,
+      value,
+      reference
+    } = this.props;
     onChangeField(id, newValue);
 
     if (reference || value === newValue) {
@@ -81,7 +88,7 @@ export default class ResourceRef extends Component<Props> {
     }
 
     if (newValue != null) {
-      renderContext.changeParent(newValue, id);
+      renderContext.changeParent(newValue, resourceId);
     }
   };
 

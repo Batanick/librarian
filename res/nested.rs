@@ -3,5 +3,14 @@
     "$type": "NestedSchema",
     "firstName": "dsada",
     "lastName": "dsadas",
-    "nested": null
+    "nested": {
+        "$type": "NestingSchema",
+        "firstName": "dasd",
+        "lastName": "asddas",
+        "nested": {
+            "$type": "NestingSchema",
+            "firstName": "dasdasd",
+            "lastName": "dasdasds"
+        }
+    }
 }
