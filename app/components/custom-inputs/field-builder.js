@@ -15,7 +15,8 @@ export default function renderInput(
   errors,
   onChange,
   resId,
-  renderContext
+  renderContext,
+  overridingConnector
 ) {
   const { type } = fieldInfo;
 
@@ -87,6 +88,7 @@ export default function renderInput(
           renderContext={renderContext}
           fieldInfo={fieldInfo}
           reference
+          overridingConnector={overridingConnector}
         />
       );
     case 'object':

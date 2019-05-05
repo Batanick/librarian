@@ -41,6 +41,8 @@ export default class SvgConnector extends Component<Props> {
     return ReactDOM.createPortal(
       <svg style={Object.assign({}, overlayStyles)}>
         <path style={Object.assign({}, svgStyles)} d={path} />
+        <circle cx={start.x} cy={start.y} r="2" style={Object.assign({}, svgStyles)}/>
+        <circle cx={finish.x} cy={finish.y} r="2" style={Object.assign({}, svgStyles)}/>
       </svg>,
       target
     );
