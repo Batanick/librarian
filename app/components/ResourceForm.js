@@ -6,15 +6,10 @@ import Card from 'react-bootstrap/Card';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 
-import StringField from './custom-inputs/StringField';
-import BooleanField from './custom-inputs/BooleanField';
-
-import * as Validators from './custom-inputs/validators';
-import ResourceRef from './custom-inputs/ResourceRef';
-
 import * as Consts from '../constants/constants';
+import renderInput from './custom-inputs/field-builder';
 
-const log = require('electron-log');
+// const log = require('electron-log');
 
 type Props = {
   name: PropTypes.string,
@@ -39,94 +34,12 @@ export default class ResourceForm extends Component<Props> {
     this.target = React.createRef();
   }
 
-  renderInput(key, fieldInfo, fieldData, errors) {
-    const { onChange, renderContext, resId } = this.props;
-
-    const { type } = fieldInfo;
-
-    switch (type) {
-      case 'string':
-        return (
-          <StringField
-            id={key}
-            type="string"
-            defaultValue={fieldInfo.default}
-            value={fieldData}
-            onChangeField={onChange}
-            errors={errors}
-            dataValidators={[]}
-          />
-        );
-      case 'integer':
-        return (
-          <StringField
-            id={key}
-            type="number"
-            defaultValue={fieldInfo.default}
-            value={fieldData}
-            onChangeField={onChange}
-            errors={errors}
-            dataValidators={[Validators.IsInteger]}
-          />
-        );
-      case 'number':
-        return (
-          <StringField
-            id={key}
-            type="number"
-            defaultValue={fieldInfo.default}
-            value={fieldData}
-            onChangeField={onChange}
-            errors={errors}
-            dataValidators={[]}
-          />
-        );
-      case 'boolean':
-        return (
-          <BooleanField
-            id={key}
-            type="checkbox"
-            defaultValue={fieldInfo.default}
-            value={fieldData}
-            onChangeField={onChange}
-          />
-        );
-      case 'ref':
-        return (
-          <ResourceRef
-            id={key}
-            value={fieldData}
-            onChangeField={onChange}
-            resourceId={resId}
-            renderContext={renderContext}
-            fieldInfo={fieldInfo}
-            reference
-          />
-        );
-      case 'object':
-        return (
-          <ResourceRef
-            id={key}
-            value={fieldData}
-            onChangeField={onChange}
-            resourceId={resId}
-            renderContext={renderContext}
-            fieldInfo={fieldInfo}
-            reference={false}
-          />
-        );
-
-      default:
-        log.error(`Unable to render field of type: ${fieldInfo.type}`);
-    }
-  }
-
   getTypeName = () => {
     const { schema } = this.props;
     return schema[Consts.FIELD_NAME_ID];
   };
 
-  renderHeader() {
+  renderHeader = () => {
     const { name, resId, dirty, nested } = this.props;
     const typeName = this.getTypeName();
     if (nested) {
@@ -143,12 +56,21 @@ export default class ResourceForm extends Component<Props> {
         <h6 className="card-subtitle text-muted">{resId}</h6>
       </Card.Header>
     );
-  }
+  };
 
   render() {
+    const {
+      schema,
+      data,
+      selected,
+      errors,
+      nested,
+      orphan,
+      onChange,
+      renderContext,
+      resId
+    } = this.props;
     // log.silly(`Rendering: ${resId}`);
-
-    const { schema, data, selected, errors, nested, orphan } = this.props;
 
     let border = 'info';
     if (selected) {
@@ -181,7 +103,15 @@ export default class ResourceForm extends Component<Props> {
                     {fieldInfo.title}
                   </Form.Label>
                   <Col key={`input-col-${key}`}>
-                    {this.renderInput(key, fieldInfo, fieldData, fieldErrors)}
+                    {renderInput(
+                      key,
+                      fieldInfo,
+                      fieldData,
+                      fieldErrors,
+                      onChange,
+                      resId,
+                      renderContext
+                    )}
                   </Col>
                 </Form.Row>
               );

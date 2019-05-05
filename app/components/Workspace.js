@@ -1,16 +1,12 @@
 // @flow
 import React, { Component } from 'react';
 // noinspection ES6CheckImport
-import { DropTarget } from 'react-dnd';
-import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import ReactResizeDetector from 'react-resize-detector';
+import Draggable from 'react-draggable';
 
 import ResourceForm from './ResourceForm';
 
-import Dragable from './Dragable';
-
-import * as IdHelpers from '../js/id-helpers';
 import * as JsonUtils from '../js/js-utils';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
@@ -24,9 +20,7 @@ const defaultOpt = {
   top: 20
 };
 
-type Props = {
-  connectDropTarget: PropTypes.object
-};
+type Props = {};
 
 const styles = {
   position: 'relative',
@@ -42,30 +36,7 @@ const scrollableStyles = {
   position: 'absolute'
 };
 
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
-    canDrop: monitor.canDrop(),
-    itemType: monitor.getItemType(),
-    getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset()
-  };
-}
-
-// noinspection JSUnusedGlobalSymbols
-const target = {
-  drop(props, monitor, component) {
-    const item = monitor.getItem();
-    const delta = monitor.getDifferenceFromInitialOffset();
-    const left = Math.round(item.left + delta.x);
-    const top = Math.round(item.top + delta.y);
-
-    component.moveChild(item.id, left, top);
-  }
-};
-
-class Workspace extends Component<Props> {
+export default class Workspace extends Component<Props> {
   props: Props;
 
   constructor(...args) {
@@ -140,71 +111,40 @@ class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
-  createNested = (id, parentId, type) => {
-    const value = {};
-    value[Consts.FIELD_NAME_TYPE] = type;
-
+  createNested = (parentId, type, value) => {
     const { resources } = this.state;
     const parent = resources[parentId];
 
     const opt = {};
+    const id = JsonUtils.generateUUID();
 
     if (parent != null) {
       opt.left = parent.left + parent.width + 50;
       opt.top = parent.top;
     }
 
+    opt.parent = parentId;
     this.registerResource(id, type, value, opt, true);
+    return id;
   };
 
-  retakeOrphan = (oldId, newId) => {
-    if (!oldId || !newId) {
-      return;
-    }
-
-    const { resources } = this.state;
-    const old = resources[oldId];
-
-    if (old == null || !old.orphan) {
-      log.warn(`Unable to retake target ${oldId} - not orphan`);
-      return;
-    }
-
+  changeParent = (resourceId, parentId) => {
+    log.silly(`Changing parent for: ${resourceId} to ${parentId}`);
     this.setState(prevState =>
       update(prevState, {
         resources: {
-          $apply: function retake(obj) {
+          $apply: function removeResource(obj) {
+            if (obj[resourceId] == null) {
+              return obj;
+            }
+
             const copy = Object.assign({}, obj);
-            IdHelpers.replaceParent(copy, oldId, newId, false);
+            copy[resourceId].parent = parentId;
             return copy;
           }
         }
       })
     );
-  };
-
-  makeOrphan = resId => {
-    const { resources } = this.state;
-    const resValue = resources[resId];
-    if (resValue == null) {
-      return;
-    }
-
-    if (resValue.nested) {
-      const newId = JsonUtils.generateUUID();
-
-      this.setState(prevState =>
-        update(prevState, {
-          resources: {
-            $apply: function changeId(obj) {
-              const copy = Object.assign({}, obj);
-              IdHelpers.replaceParent(copy, resId, newId, true);
-              return copy;
-            }
-          }
-        })
-      );
-    }
   };
 
   resetWorkspace(schemas) {
@@ -224,9 +164,8 @@ class Workspace extends Component<Props> {
       getResourceInfo: this.getResourceInfo,
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
-      makeOrphan: this.makeOrphan,
-      createNested: this.createNested,
-      retakeOrphan: this.retakeOrphan
+      changeParent: this.changeParent,
+      createNested: this.createNested
     };
   }
 
@@ -293,6 +232,13 @@ class Workspace extends Component<Props> {
         resources: {
           $apply: function removeResource(obj) {
             const copy = Object.assign({}, obj);
+
+            Object.keys(copy).forEach(key => {
+              if (copy[key].parent === resId) {
+                copy[key].parent = null;
+              }
+            });
+
             delete copy[resId];
             return copy;
           }
@@ -315,6 +261,10 @@ class Workspace extends Component<Props> {
     let entry = resources[resId];
     if (!entry) {
       entry = {};
+    }
+
+    if (nested) {
+      entry.parent = opt.parent;
     }
 
     entry.top = topPos;
@@ -359,16 +309,13 @@ class Workspace extends Component<Props> {
         return;
       }
 
-      const id = IdHelpers.getNestedId(resId, name);
-      res[name] = id;
+      const nestedType = value[Consts.FIELD_NAME_TYPE];
+      if (nestedType == null || !schemas[nestedType]) {
+        log.error(`Unable to load resource of type: ${nestedType}`);
+        return;
+      }
 
-      this.registerResource(
-        id,
-        value[Consts.FIELD_NAME_TYPE],
-        value,
-        optClone,
-        true
-      );
+      res[name] = this.createNested(resId, nestedType, value);
       optClone.top += 200;
     });
   }
@@ -394,6 +341,7 @@ class Workspace extends Component<Props> {
       const prop = schema.properties[name];
       if (prop.type !== 'object') {
         result[name] = res[name];
+        return;
       }
 
       const value = res[name];
@@ -401,10 +349,9 @@ class Workspace extends Component<Props> {
         return;
       }
 
-      const id = IdHelpers.getNestedId(resId, name);
-      const actualValue = resources[id];
+      const actualValue = resources[value];
       if (actualValue != null) {
-        result[name] = this.assembleResource(id, actualValue.value);
+        result[name] = this.assembleResource(value, actualValue.value);
       }
     });
 
@@ -476,18 +423,35 @@ class Workspace extends Component<Props> {
     );
 
     if (!skipDirty) {
-      const parentId = IdHelpers.getParentId(resId);
-
-      this.setState(prevState =>
-        update(prevState, {
-          resources: {
-            [parentId]: {
-              $merge: { dirty: true }
-            }
-          }
-        })
-      );
+      this.markParentDirty(resId, resources);
     }
+  }
+
+  markParentDirty(resId, resources) {
+    let currentId = resId;
+    // searching for the root reference parent to mark as dirty
+    do {
+      const current = resources[currentId];
+      if (current == null) {
+        break;
+      }
+
+      const resToUpdate = currentId;
+      if (!current.nested) {
+        this.setState(prevState =>
+          update(prevState, {
+            resources: {
+              [resToUpdate]: {
+                $merge: { dirty: true }
+              }
+            }
+          })
+        );
+        break;
+      }
+
+      currentId = current.parent;
+    } while (currentId != null);
   }
 
   toggleDebugGeometry() {
@@ -525,15 +489,14 @@ class Workspace extends Component<Props> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
     const { resources, schemas, selected, renderContext } = this.state;
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    // log.silly(resources);
+    log.silly(JSON.stringify(resources));
     // log.silly(selected);
 
-    return connectDropTarget(
+    return (
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
         <div
           id="workspace"
@@ -552,7 +515,7 @@ class Workspace extends Component<Props> {
               dirty,
               errors,
               nested,
-              orphan
+              parent
             } = resources[key];
             const schema = schemas[type];
 
@@ -562,6 +525,7 @@ class Workspace extends Component<Props> {
             }
 
             const isSelected = selected[key];
+            const orphan = nested && parent == null;
 
             const selfThis = this;
             const onChange = function changeWrapper(
@@ -586,34 +550,37 @@ class Workspace extends Component<Props> {
             const name = value[Consts.FIELD_NAME_NAME];
 
             return (
-              <Dragable
+              <Draggable
                 key={key}
                 id={key}
-                left={left}
-                top={top}
-                connectDragSource=""
-                isDragging="false"
+                position={{ x: left, y: top }}
+                onDrag={(evt, data) => {
+                  this.moveChild(key, data.x, data.y);
+                }}
+                enableUserSelectHack={false} // https://github.com/mzabriskie/react-draggable/issues/315
               >
-                <ReactResizeDetector
-                  handleWidth
-                  handleHeight
-                  onResize={resizeCallback}
-                >
-                  <ResourceForm
-                    schema={schema}
-                    data={value}
-                    name={name}
-                    dirty={dirty}
-                    onChange={onChange}
-                    resId={key}
-                    selected={isSelected}
-                    errors={errors}
-                    renderContext={renderContext}
-                    nested={nested}
-                    orphan={orphan}
-                  />
-                </ReactResizeDetector>
-              </Dragable>
+                <div style={{ position: 'absolute' }}>
+                  <ReactResizeDetector
+                    handleWidth
+                    handleHeight
+                    onResize={resizeCallback}
+                  >
+                    <ResourceForm
+                      schema={schema}
+                      data={value}
+                      name={name}
+                      dirty={dirty}
+                      onChange={onChange}
+                      resId={key}
+                      selected={isSelected}
+                      errors={errors}
+                      renderContext={renderContext}
+                      nested={nested}
+                      orphan={orphan}
+                    />
+                  </ReactResizeDetector>
+                </div>
+              </Draggable>
             );
           })}
           <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
@@ -622,5 +589,3 @@ class Workspace extends Component<Props> {
     );
   }
 }
-
-export default DropTarget('resource', target, collect)(Workspace);

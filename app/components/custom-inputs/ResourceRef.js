@@ -11,8 +11,7 @@ import update from 'immutability-helper';
 // noinspection ES6CheckImport
 import Octicon, {
   FileSymlinkFile,
-  Link,
-  LinkExternal,
+  Eye,
   Plus,
   X
 } from '@githubprimer/octicons-react';
@@ -20,7 +19,8 @@ import Octicon, {
 import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
 import ModalSelect from '../ModalSelect';
-import * as IdHelpers from '../../js/id-helpers';
+
+import * as Consts from '../../constants/constants';
 
 const log = require('electron-log');
 
@@ -31,7 +31,8 @@ type Props = {
   onChangeField: PropTypes.func,
   renderContext: PropTypes.obj,
   fieldInfo: PropTypes.obj,
-  reference: PropTypes.bool
+  reference: PropTypes.bool,
+  overridingConnector: PropTypes.obj
 };
 
 const labelStyles = {
@@ -42,6 +43,22 @@ const labelStyles = {
 };
 
 export default class ResourceRef extends Component<Props> {
+  static calculateConnector(target, resourceInfo) {
+    const { current } = target;
+    if (current == null) {
+      log.warn('Unable to calculate connector');
+      return null;
+    }
+
+    const box = current.getBoundingClientRect();
+    const scrollable = document.getElementById('scrollableWorkspace');
+
+    return {
+      x: resourceInfo.left + resourceInfo.width - 15,
+      y: box.top + box.height / 2 + scrollable.scrollTop
+    };
+  }
+
   constructor(...args) {
     super(...args);
 
@@ -54,13 +71,14 @@ export default class ResourceRef extends Component<Props> {
   }
 
   componentDidUpdate() {
-    const { value, reference, resourceId, id } = this.props;
+    const { value, reference, resourceId, id, renderContext } = this.props;
     if (!reference) {
-      // making sure that we always have correct value for non referenced types
-      const correctId = IdHelpers.getNestedId(resourceId, id);
-      if (value != null && value !== correctId) {
-        log.warn(`Fixing id value for ${correctId}`);
-        this.update(correctId);
+      if (value) {
+        // if value resource disappeared - updating
+        if (!renderContext.getResourceInfo(value)) {
+          log.warn(`Fixing value for ${resourceId}/${id}`);
+          this.update(null);
+        }
       }
     }
   }
@@ -68,21 +86,25 @@ export default class ResourceRef extends Component<Props> {
   update = newValue => {
     const {
       id,
-      resourceId,
       onChangeField,
       renderContext,
+      resourceId,
       value,
       reference
     } = this.props;
     onChangeField(id, newValue);
 
-    if (!reference && value !== newValue) {
-      if (value != null && newValue == null) {
-        renderContext.makeOrphan(value);
-      } else if (value == null && newValue != null) {
-        const oldId = IdHelpers.getNestedId(resourceId, id);
-        renderContext.retakeOrphan(newValue, oldId);
-      }
+    if (reference || value === newValue) {
+      return;
+    }
+
+    // nesting reference handling only
+    if (value != null) {
+      renderContext.changeParent(value, null);
+    }
+
+    if (newValue != null) {
+      renderContext.changeParent(newValue, resourceId);
     }
   };
 
@@ -106,13 +128,16 @@ export default class ResourceRef extends Component<Props> {
   }
 
   getConnector() {
-    const { current } = this.target;
-    if (!current) {
-      log.warn('No connector coordinates');
-      return null;
+    const { renderContext, resourceId, overridingConnector } = this.props;
+
+    if (overridingConnector != null) {
+      return overridingConnector;
     }
-    const box = current.getBoundingClientRect();
-    return { x: box.right + 10, y: box.top + box.height / 2 };
+
+    return ResourceRef.calculateConnector(
+      this.target,
+      renderContext.getResourceInfo(resourceId)
+    );
   }
 
   loadResource = resId => {
@@ -179,10 +204,12 @@ export default class ResourceRef extends Component<Props> {
       return;
     }
 
-    const { renderContext, id, resourceId } = this.props;
+    const { renderContext, resourceId } = this.props;
 
-    const refId = IdHelpers.getNestedId(resourceId, id);
-    renderContext.createNested(refId, resourceId, type);
+    const value = {
+      [Consts.FIELD_NAME_TYPE]: type
+    };
+    const refId = renderContext.createNested(resourceId, type, value);
     this.update(refId);
   };
 
@@ -203,7 +230,7 @@ export default class ResourceRef extends Component<Props> {
       return null;
     }
 
-    if (!reference && !resource.orphan) {
+    if (!reference && resource.parent) {
       return null;
     }
 
@@ -295,7 +322,7 @@ export default class ResourceRef extends Component<Props> {
             className="btn btn-secondary btn-sm"
             onClick={() => this.loadResource(value)}
           >
-            <Octicon size="small" icon={LinkExternal} />
+            <Octicon size="small" icon={Eye} />
           </Button>
         </div>
       );
@@ -308,12 +335,6 @@ export default class ResourceRef extends Component<Props> {
           onClick={() => this.deleteRef(value)}
         >
           <Octicon size="small" icon={X} />
-        </Button>
-        <Button
-          className="btn btn-secondary btn-sm"
-          onClick={() => this.loadResource(value)}
-        >
-          <Octicon size="small" icon={Link} />
         </Button>
         {this.renderLink(info)}
       </div>

@@ -1,7 +1,5 @@
 // @flow
 import React, { Component } from 'react';
-import { DragDropContext } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
 import Workspace from '../components/Workspace';
 import ResourceTypeSelect from '../components/ResourceTypeSelect';
 import ExistingResourceSelect from '../components/ExistingResourceSelect';
@@ -10,7 +8,7 @@ import ExistingResourceSelect from '../components/ExistingResourceSelect';
 
 type Props = {};
 
-class Root extends Component<Props> {
+export default class Root extends Component<Props> {
   props: Props;
 
   constructor(...args) {
@@ -27,5 +25,3 @@ class Root extends Component<Props> {
     );
   }
 }
-
-export default DragDropContext(HTML5Backend)(Root);
