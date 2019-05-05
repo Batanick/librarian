@@ -300,23 +300,44 @@ export default class Workspace extends Component<Props> {
 
     Object.keys(schema.properties).forEach(name => {
       const prop = schema.properties[name];
-      if (prop.type !== 'object') {
-        return;
-      }
-
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const nestedType = value[Consts.FIELD_NAME_TYPE];
-      if (nestedType == null || !schemas[nestedType]) {
-        log.error(`Unable to load resource of type: ${nestedType}`);
+      if (prop.type === 'object') {
+        const nestedType = value[Consts.FIELD_NAME_TYPE];
+        if (nestedType == null || !schemas[nestedType]) {
+          log.error(`Unable to load resource of type: ${nestedType}`);
+          return;
+        }
+        res[name] = this.createNested(resId, nestedType, value);
+        optClone.top += 200;
         return;
       }
 
-      res[name] = this.createNested(resId, nestedType, value);
-      optClone.top += 200;
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        res[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const element = value[i];
+          if (element == null) {
+            res[name].push(null);
+          } else {
+            const nestedType = element[Consts.FIELD_NAME_TYPE];
+            if (nestedType == null || !schemas[nestedType]) {
+              log.error(`Unable to load resource of type: ${nestedType}`);
+            } else {
+              const nestedId = this.createNested(resId, nestedType, element);
+              res[name].push(nestedId);
+              optClone.top += 200;
+            }
+          }
+        }
+      }
     });
   }
 
