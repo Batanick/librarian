@@ -1,0 +1,18 @@
+{
+  "$id": "ReferencingResource",
+  "$type": "resource",
+  "properties": [
+    {
+      "name": "Reference",
+      "title": "Reference",
+      "type": "ref",
+      "allowedTypes": ["AnotherDerivedResource", "DerivedResource"]
+    },
+    {
+      "name": "RefToSame",
+      "title": "RefToSame",
+      "type": "ref",
+      "allowedTypes": ["ReferencingResource"]
+    }
+  ]
+}

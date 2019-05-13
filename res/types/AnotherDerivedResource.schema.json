@@ -1,0 +1,11 @@
+{
+  "$id": "AnotherDerivedResource",
+  "$type": "resource",
+  "properties": [
+    {
+      "name": "BaseClassProp",
+      "title": "BaseClassProp",
+      "type": "integer"
+    }
+  ]
+}

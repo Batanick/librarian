@@ -114,7 +114,6 @@ export default class Workspace extends Component<Props> {
 
   createNested = (parentId, type, value, opt) => {
     const id = JsonUtils.generateUUID();
-
     this.registerResource(id, type, value, opt, true, parentId);
     return id;
   };
@@ -289,8 +288,8 @@ export default class Workspace extends Component<Props> {
     const optClone = JsonUtils.clone(opt);
     optClone.left += 400;
 
-    Object.keys(schema.properties).forEach(name => {
-      const prop = schema.properties[name];
+    schema.properties.forEach(prop => {
+      const { name } = prop;
       const value = res[name];
       if (value == null) {
         return;
@@ -339,7 +338,7 @@ export default class Workspace extends Component<Props> {
   }
 
   assembleResource(resId, res) {
-    log.silly(`Assembling ${resId}`);
+    log.info(`Assembling ${resId}`);
     const { schemas, resources } = this.state;
     const type = res[Consts.FIELD_NAME_TYPE];
     const schema = schemas[type];
@@ -355,13 +354,13 @@ export default class Workspace extends Component<Props> {
 
     const result = JsonUtils.clone(res);
 
-    Object.keys(schema.properties).forEach(name => {
+    schema.properties.forEach(prop => {
+      const { name } = prop;
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const prop = schema.properties[name];
       if (prop.type === 'object') {
         const actualValue = resources[value];
         if (actualValue != null) {

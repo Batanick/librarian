@@ -1,39 +1,38 @@
 {
-    "$id": "644233a1-2c07-40bb-8277-48b9d698f2ed",
-    "$type": "ArraySchema",
-    "nesting_ref_array": [
-<<<<<<< HEAD
+    "$id": "a772a372-8148-416e-97fd-c924a5818f33",
+    "$type": "ArrayResource",
+    "FloatArray": [
+        "1",
+        "2",
+        "3"
+    ],
+    "PartArray": [
         {
-            "$type": "NestingSchema",
-            "lastName": "fsdfsdd",
-            "nested": {
-                "$type": "NestingSchema",
-                "firstName": "444",
-                "lastName": "444",
-                "nested": {
-                    "$type": "NestingSchema"
-                }
-            }
+            "$type": "ResourcePart",
+            "IntField": "1",
+            "StringField": "1"
         },
-        null,
-        null,
         {
-            "$type": "NestingSchema",
-            "firstName": "312311231232",
-            "lastName": "12312"
+            "$type": "ResourcePart",
+            "IntField": "2",
+            "StringField": "2231231321"
         }
-=======
-        
->>>>>>> origin/develop
     ],
-    "ref_array": [
-        "a474b54d-5bac-4bbb-af35-00d2e16ac6ea",
-        "0f5a38e2-afa1-4453-a718-18f5d2128335",
-        "a474b54d-5bac-4bbb-af35-00d2e16ac6ea"
+    "PartList": [
+        {
+            "$type": "ResourcePart",
+            "IntField": "1",
+            "StringField": "1"
+        },
+        {
+            "$type": "ResourcePart2",
+            "BoolField": "true",
+            "IntField": "2",
+            "StringField": "2"
+        }
     ],
-    "string_array": [
-        "6",
-        "",
-        "4"
+    "ResourceList": [
+        null,
+        "7d304d1d-da59-4419-9d97-af59fb4cb5e7"
     ]
 }

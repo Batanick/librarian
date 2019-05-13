@@ -1,0 +1,18 @@
+{
+  "$id": "NestingPartResource",
+  "$type": "resource",
+  "properties": [
+    {
+      "name": "Part",
+      "title": "Part",
+      "type": "object",
+      "allowedTypes": ["ResourcePart", "ResourcePart2"]
+    },
+    {
+      "name": "NestingPart",
+      "title": "NestingPart",
+      "type": "object",
+      "allowedTypes": ["NestingPart"]
+    }
+  ]
+}
