@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import Col from 'react-bootstrap/Col';
@@ -23,7 +23,7 @@ import Octicon, {
 import * as JsonUtils from '../../js/js-utils';
 
 import renderInput from './field-builder';
-import ResourceRef from "./ResourceRef";
+import ResourceRef from './ResourceRef';
 
 type Props = {
   id: PropTypes.string,
@@ -47,22 +47,27 @@ export default class ArrayField extends Component<Props> {
   }
 
   update = e => {
-    const {id, onChangeField} = this.props;
+    const { id, onChangeField } = this.props;
     onChangeField(id, e);
   };
 
   onElementChange = (index, elValue) => {
-    const {value} = this.props;
+    const { value } = this.props;
     const copy = JsonUtils.clone(value);
     copy[index] = elValue;
     this.update(copy);
   };
 
   renderField = (key, index, shown) => {
-    const {renderContext, fieldInfo, value, resourceId} = this.props;
+    const { renderContext, fieldInfo, value, resourceId } = this.props;
     const elementsInfo = fieldInfo.elements;
 
-    const overrideConnector = shown ? null : ResourceRef.calculateConnector(this.target, renderContext.getResourceInfo(resourceId));
+    const overrideConnector = shown
+      ? null
+      : ResourceRef.calculateConnector(
+          this.target,
+          renderContext.getResourceInfo(resourceId)
+        );
 
     const selfThis = this;
     const changeHandler = function onChange(id, e) {
@@ -82,7 +87,7 @@ export default class ArrayField extends Component<Props> {
   };
 
   renderArray(actualValue, shown) {
-    const {version} = this.state;
+    const { version } = this.state;
     const selfThis = this;
 
     return actualValue.map((element, index) => {
@@ -104,7 +109,7 @@ export default class ArrayField extends Component<Props> {
                   this.swap(index, index - 1);
                 }}
               >
-                <Octicon size="small" icon={ArrowUp}/>
+                <Octicon size="small" icon={ArrowUp} />
               </Button>
               <Button
                 variant="primary"
@@ -113,7 +118,7 @@ export default class ArrayField extends Component<Props> {
                   this.swap(index, index + 1);
                 }}
               >
-                <Octicon size="small" icon={ArrowDown}/>
+                <Octicon size="small" icon={ArrowDown} />
               </Button>
               <Button
                 variant="danger"
@@ -122,7 +127,7 @@ export default class ArrayField extends Component<Props> {
                   deleteWrapper();
                 }}
               >
-                <Octicon size="small" icon={X}/>
+                <Octicon size="small" icon={X} />
               </Button>
             </ButtonToolbar>
           </Col>
@@ -132,7 +137,7 @@ export default class ArrayField extends Component<Props> {
   }
 
   addElement = () => {
-    const {value} = this.props;
+    const { value } = this.props;
     if (value == null) {
       this.update([null]);
       return;
@@ -145,14 +150,14 @@ export default class ArrayField extends Component<Props> {
   };
 
   removeElement = index => {
-    const {value} = this.props;
+    const { value } = this.props;
     value.splice(index, 1);
     this.bumpVersion();
     this.update(value);
   };
 
   swap = (index1, index2) => {
-    const {value} = this.props;
+    const { value } = this.props;
     if (value[index1] === undefined || value[index2] === undefined) {
       return;
     }
@@ -162,8 +167,8 @@ export default class ArrayField extends Component<Props> {
     copy[index1] = copy[index2];
     copy[index2] = tmp;
 
-    this.bumpVersion();
     this.update(copy);
+    this.bumpVersion();
   };
 
   bumpVersion = () => {
@@ -179,7 +184,7 @@ export default class ArrayField extends Component<Props> {
   };
 
   render() {
-    const {value, resourceId} = this.props;
+    const { value, resourceId } = this.props;
     const actualValue = value == null ? [] : value;
 
     let elementsCount = 0;
@@ -190,24 +195,26 @@ export default class ArrayField extends Component<Props> {
     }
 
     const labelId = `label-${resourceId}-id`;
-    const {open} = this.state;
+    const { open } = this.state;
     return (
       <div ref={this.target}>
         <Row noGutters>
-          <Col/>
+          <Col />
           <Col md="auto">
-            <label className="p-1 text-muted" htmlFor={labelId}> {/* eslint-disable-line jsx-a11y/label-has-for */}
+            <label className="p-1 text-muted" htmlFor={labelId}>
+              {' '}
+              {/* eslint-disable-line jsx-a11y/label-has-for */}
               {elementsCount}/{actualValue.length}
             </label>
             <Button
               id={labelId}
               variant="outline-secondary"
               size="sm"
-              onClick={() => this.setState({open: !open})}
+              onClick={() => this.setState({ open: !open })}
               aria-controls="example-collapse-text"
               aria-expanded={open}
             >
-              <Octicon icon={open ? ChevronUp : ChevronDown}/>
+              <Octicon icon={open ? ChevronUp : ChevronDown} />
             </Button>
           </Col>
         </Row>
@@ -215,7 +222,7 @@ export default class ArrayField extends Component<Props> {
           <div className="flex-nowrap">
             {this.renderArray(actualValue, open)}
             <Row>
-              <Col/>
+              <Col />
               <Col md="auto">
                 <Button
                   variant="success"
@@ -224,7 +231,7 @@ export default class ArrayField extends Component<Props> {
                     this.addElement();
                   }}
                 >
-                  <Octicon size="small" icon={Plus}/>
+                  <Octicon size="small" icon={Plus} />
                 </Button>
               </Col>
             </Row>

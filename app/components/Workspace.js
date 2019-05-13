@@ -33,7 +33,8 @@ const scrollableStyles = {
   overflowX: 'scroll',
   maxHeight: '100%',
   maxWidth: '100%',
-  position: 'absolute'
+  position: 'absolute',
+  userSelect: 'none'
 };
 
 export default class Workspace extends Component<Props> {
@@ -111,20 +112,10 @@ export default class Workspace extends Component<Props> {
     ipcRenderer.send(Events.DIALOG_SELECT_EXISTING_RESOURCE, [id], opt);
   };
 
-  createNested = (parentId, type, value) => {
-    const { resources } = this.state;
-    const parent = resources[parentId];
-
-    const opt = {};
+  createNested = (parentId, type, value, opt) => {
     const id = JsonUtils.generateUUID();
 
-    if (parent != null) {
-      opt.left = parent.left + parent.width + 50;
-      opt.top = parent.top;
-    }
-
-    opt.parent = parentId;
-    this.registerResource(id, type, value, opt, true);
+    this.registerResource(id, type, value, opt, true, parentId);
     return id;
   };
 
@@ -247,7 +238,7 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  registerResource(resId, type, res, opt, nested) {
+  registerResource(resId, type, res, opt, nested, parentId) {
     log.info(`Loading resource [${resId}] of type ${type}`);
     const actualOpt = opt == null ? defaultOpt : opt;
 
@@ -264,7 +255,7 @@ export default class Workspace extends Component<Props> {
     }
 
     if (nested) {
-      entry.parent = opt.parent;
+      entry.parent = parentId;
     }
 
     entry.top = topPos;
@@ -300,23 +291,50 @@ export default class Workspace extends Component<Props> {
 
     Object.keys(schema.properties).forEach(name => {
       const prop = schema.properties[name];
-      if (prop.type !== 'object') {
-        return;
-      }
-
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const nestedType = value[Consts.FIELD_NAME_TYPE];
-      if (nestedType == null || !schemas[nestedType]) {
-        log.error(`Unable to load resource of type: ${nestedType}`);
+      if (prop.type === 'object') {
+        const nestedType = value[Consts.FIELD_NAME_TYPE];
+        if (nestedType == null || !schemas[nestedType]) {
+          log.error(`Unable to load resource of type: ${nestedType}`);
+          return;
+        }
+
+        res[name] = this.createNested(resId, nestedType, value, optClone);
+        optClone.top += 200;
         return;
       }
 
-      res[name] = this.createNested(resId, nestedType, value);
-      optClone.top += 200;
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        res[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const element = value[i];
+          if (element == null) {
+            res[name].push(null);
+          } else {
+            const nestedType = element[Consts.FIELD_NAME_TYPE];
+            if (nestedType == null || !schemas[nestedType]) {
+              log.error(`Unable to load resource of type: ${nestedType}`);
+            } else {
+              const nestedId = this.createNested(
+                resId,
+                nestedType,
+                element,
+                optClone
+              );
+              res[name].push(nestedId);
+              optClone.top += 200;
+            }
+          }
+        }
+      }
     });
   }
 
@@ -338,21 +356,42 @@ export default class Workspace extends Component<Props> {
     const result = JsonUtils.clone(res);
 
     Object.keys(schema.properties).forEach(name => {
-      const prop = schema.properties[name];
-      if (prop.type !== 'object') {
-        result[name] = res[name];
-        return;
-      }
-
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const actualValue = resources[value];
-      if (actualValue != null) {
-        result[name] = this.assembleResource(value, actualValue.value);
+      const prop = schema.properties[name];
+      if (prop.type === 'object') {
+        const actualValue = resources[value];
+        if (actualValue != null) {
+          result[name] = this.assembleResource(value, actualValue.value);
+        }
+        return;
       }
+
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        result[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const elementId = value[i];
+          if (elementId == null) {
+            result[name].push(null);
+          } else {
+            const element = resources[elementId];
+            const assembled = this.assembleResource(elementId, element.value);
+            result[name].push(assembled);
+          }
+        }
+
+        return;
+      }
+
+      // other types
+      result[name] = res[name];
     });
 
     return result;
@@ -493,7 +532,7 @@ export default class Workspace extends Component<Props> {
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    log.silly(JSON.stringify(resources));
+    // log.silly(JSON.stringify(resources));
     // log.silly(selected);
 
     return (
