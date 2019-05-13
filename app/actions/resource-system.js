@@ -85,6 +85,7 @@ export default class ResourceSystem {
   }
 
   static loadResourceFromFile(resourcePath) {
+    log.info(`Loading: ${resourcePath}`);
     try {
       const content = fs.readFileSync(resourcePath, 'utf-8');
       const res = JSON.parse(content);

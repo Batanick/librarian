@@ -1,0 +1,17 @@
+{
+  "$id": "NestingPart",
+  "$type": "part",
+  "properties": [
+    {
+      "name": "TestString",
+      "title": "TestString",
+      "type": "string"
+    },
+    {
+      "name": "Part",
+      "title": "Part",
+      "type": "object",
+      "allowedTypes": ["NestingPart"]
+    }
+  ]
+}
