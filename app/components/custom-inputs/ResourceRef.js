@@ -110,8 +110,12 @@ export default class ResourceRef extends Component<Props> {
 
   renderLink(targetInfo) {
     const connector = this.getConnector();
-    if (!connector) {
-      return;
+    if (!connector || !connector.x || !connector.y) {
+      return null;
+    }
+
+    if (!targetInfo) {
+      return null;
     }
 
     const { left, top, height } = targetInfo;
@@ -292,18 +296,29 @@ export default class ResourceRef extends Component<Props> {
     );
   }
 
+  renderCreateNew() {
+    const { reference } = this.props;
+    if (!reference) {
+      return (
+        <Button
+          className="btn btn-secondary btn-sm"
+          onClick={() => this.onCreateNew()}
+        >
+          <Octicon size="small" icon={Plus} />
+        </Button>
+      );
+    }
+
+    return null;
+  }
+
   renderField() {
     const { value, renderContext } = this.props;
 
     if (value == null) {
       return (
         <div>
-          <Button
-            className="btn btn-secondary btn-sm"
-            onClick={() => this.onCreateNew()}
-          >
-            <Octicon size="small" icon={Plus} />
-          </Button>
+          {this.renderCreateNew()}
           <Button
             className="btn btn-secondary btn-sm"
             onClick={() => this.onStartSelect()}

@@ -70,6 +70,7 @@ export default class ResourceForm extends Component<Props> {
       renderContext,
       resId
     } = this.props;
+    const { properties } = schema;
     // log.silly(`Rendering: ${resId}`);
 
     let border = 'info';
@@ -84,7 +85,7 @@ export default class ResourceForm extends Component<Props> {
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px' }}
+        style={{ borderWidth: '2px', userSelect: 'none' }}
         border={border}
         role="presentation"
       >
@@ -92,8 +93,8 @@ export default class ResourceForm extends Component<Props> {
 
         <Card.Body className="card-body">
           <Form>
-            {Object.keys(schema.properties).map(key => {
-              const fieldInfo = schema.properties[key];
+            {properties.map(fieldInfo => {
+              const key = fieldInfo.name;
               const fieldData = data[key];
               const fieldErrors = errors ? errors[key] : null;
 

@@ -91,11 +91,15 @@ export default class ResourceClient {
   }
 
   createResource() {
-    const schemaTypes = Object.keys(this.resourceSystem.schemas);
-    this.mainWindow.webContents.send(
-      Events.DIALOG_SELECT_SCHEMA_TYPE,
-      schemaTypes
-    );
+    const res = [];
+    Object.keys(this.resourceSystem.schemas).forEach(key => {
+      const schema = this.resourceSystem.schemas[key];
+      if (schema[Consts.FIELD_NAME_TYPE] === 'resource') {
+        res.push(key);
+      }
+    });
+
+    this.mainWindow.webContents.send(Events.DIALOG_SELECT_SCHEMA_TYPE, res);
   }
 
   saveAll() {
