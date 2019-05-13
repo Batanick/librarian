@@ -1,0 +1,16 @@
+{
+  "$id": "CustomPropertiesResource",
+  "type": "object",
+  "properties": [
+    {
+      "name": "JustProperty",
+      "title": "JustProperty",
+      "type": "integer"
+    },
+    {
+      "name": "CustomTitleProperty",
+      "title": "CustomTitle",
+      "type": "boolean"
+    }
+  ]
+}

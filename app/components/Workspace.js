@@ -493,7 +493,7 @@ export default class Workspace extends Component<Props> {
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
-    log.silly(JSON.stringify(resources));
+    // log.silly(JSON.stringify(resources));
     // log.silly(selected);
 
     return (

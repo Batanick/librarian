@@ -1,0 +1,41 @@
+{
+  "$id": "BaseTypesResource",
+  "type": "object",
+  "properties": [
+    {
+      "name": "IntField",
+      "title": "IntField",
+      "type": "integer"
+    },
+    {
+      "name": "LongField",
+      "title": "LongField",
+      "type": "integer"
+    },
+    {
+      "name": "ByteField",
+      "title": "ByteField",
+      "type": "integer"
+    },
+    {
+      "name": "FloatField",
+      "title": "FloatField",
+      "type": "number"
+    },
+    {
+      "name": "DoubleField",
+      "title": "DoubleField",
+      "type": "number"
+    },
+    {
+      "name": "StringField",
+      "title": "StringField",
+      "type": "string"
+    },
+    {
+      "name": "BoolField",
+      "title": "BoolField",
+      "type": "boolean"
+    }
+  ]
+}
