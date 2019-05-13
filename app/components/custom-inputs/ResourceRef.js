@@ -110,8 +110,12 @@ export default class ResourceRef extends Component<Props> {
 
   renderLink(targetInfo) {
     const connector = this.getConnector();
-    if (!connector) {
-      return;
+    if (!connector || !connector.x || !connector.y) {
+      return null;
+    }
+
+    if (!targetInfo) {
+      return null;
     }
 
     const { left, top, height } = targetInfo;

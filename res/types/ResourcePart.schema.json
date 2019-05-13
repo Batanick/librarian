@@ -1,6 +1,6 @@
 {
   "$id": "ResourcePart",
-  "type": "object",
+  "$type": "part",
   "properties": [
     {
       "name": "IntField",

@@ -1,6 +1,6 @@
 {
   "$id": "ResourcePart2",
-  "type": "object",
+  "$type": "part",
   "properties": [
     {
       "name": "BoolField",

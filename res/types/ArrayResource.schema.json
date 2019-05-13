@@ -1,6 +1,6 @@
 {
   "$id": "ArrayResource",
-  "type": "object",
+  "$type": "resource",
   "properties": [
     {
       "name": "IntList",

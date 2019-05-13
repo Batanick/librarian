@@ -85,7 +85,7 @@ export default class ResourceForm extends Component<Props> {
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px' }}
+        style={{ borderWidth: '2px', userSelect: "none" }}
         border={border}
         role="presentation"
       >

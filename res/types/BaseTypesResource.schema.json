@@ -1,6 +1,6 @@
 {
   "$id": "BaseTypesResource",
-  "type": "object",
+  "$type": "resource",
   "properties": [
     {
       "name": "IntField",

@@ -1,6 +1,6 @@
 {
   "$id": "ReferencingResource",
-  "type": "object",
+  "$type": "resource",
   "properties": [
     {
       "name": "Reference",

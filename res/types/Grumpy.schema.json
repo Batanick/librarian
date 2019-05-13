@@ -1,5 +1,5 @@
 {
   "$id": "Grumpy",
-  "type": "object",
+  "$type": "resource",
   "properties": []
 }

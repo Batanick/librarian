@@ -1,5 +1,5 @@
 {
   "$id": "NamelessResource",
-  "type": "object",
+  "$type": "resource",
   "properties": []
 }

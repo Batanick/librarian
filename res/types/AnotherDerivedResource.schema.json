@@ -1,6 +1,6 @@
 {
   "$id": "AnotherDerivedResource",
-  "type": "object",
+  "$type": "resource",
   "properties": [
     {
       "name": "BaseClassProp",

@@ -1,6 +1,6 @@
 {
   "$id": "CustomPropertiesResource",
-  "type": "object",
+  "$type": "resource",
   "properties": [
     {
       "name": "JustProperty",
