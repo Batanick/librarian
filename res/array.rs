@@ -6,11 +6,33 @@
         "2",
         "3"
     ],
+    "PartArray": [
+        {
+            "$type": "ResourcePart",
+            "IntField": "1",
+            "StringField": "1"
+        },
+        {
+            "$type": "ResourcePart",
+            "IntField": "2",
+            "StringField": "2231231321"
+        }
+    ],
     "PartList": [
-        "a06dee2a-a262-4584-a62e-229c0a695a5d",
-        "3e8558ab-8918-42fc-a7bc-0273bf317347"
+        {
+            "$type": "ResourcePart",
+            "IntField": "1",
+            "StringField": "1"
+        },
+        {
+            "$type": "ResourcePart2",
+            "BoolField": "true",
+            "IntField": "2",
+            "StringField": "2"
+        }
     ],
     "ResourceList": [
-        null
+        null,
+        "7d304d1d-da59-4419-9d97-af59fb4cb5e7"
     ]
 }

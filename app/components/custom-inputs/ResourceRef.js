@@ -213,7 +213,15 @@ export default class ResourceRef extends Component<Props> {
     const value = {
       [Consts.FIELD_NAME_TYPE]: type
     };
-    const refId = renderContext.createNested(resourceId, type, value);
+
+    const info = renderContext.getResourceInfo(resourceId);
+    const opt = {};
+    if (info) {
+      opt.left = info.left + info.width + 50;
+      opt.top = info.top;
+    }
+
+    const refId = renderContext.createNested(resourceId, type, value, opt);
     this.update(refId);
   };
 

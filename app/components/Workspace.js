@@ -1,5 +1,5 @@
 // @flow
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 // noinspection ES6CheckImport
 import update from 'immutability-helper';
 import ReactResizeDetector from 'react-resize-detector';
@@ -13,7 +13,7 @@ import * as Consts from '../constants/constants';
 
 const log = require('electron-log');
 
-const {ipcRenderer} = window.require('electron');
+const { ipcRenderer } = window.require('electron');
 
 const defaultOpt = {
   left: 20,
@@ -33,7 +33,8 @@ const scrollableStyles = {
   overflowX: 'scroll',
   maxHeight: '100%',
   maxWidth: '100%',
-  position: 'absolute'
+  position: 'absolute',
+  userSelect: 'none'
 };
 
 export default class Workspace extends Component<Props> {
@@ -81,7 +82,7 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {width, height}
+            $merge: { width, height }
           }
         }
       })
@@ -89,16 +90,16 @@ export default class Workspace extends Component<Props> {
   };
 
   getResourceInfo = id => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     return resources[id];
   };
 
   findResourceAt = (x, y) => {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const ids = Object.keys(resources);
     for (let i = 0; i < ids.length; i += 1) {
       const key = ids[i];
-      const {left, top, width, height} = resources[key];
+      const { left, top, width, height } = resources[key];
       if (x > left && x < left + width && y > top && y < top + height) {
         return key;
       }
@@ -112,19 +113,8 @@ export default class Workspace extends Component<Props> {
   };
 
   createNested = (parentId, type, value, opt) => {
-    const {resources} = this.state;
-    const parent = resources[parentId];
-
-    const actualOpt = opt == null ? {} : JsonUtils.clone(opt);
     const id = JsonUtils.generateUUID();
-
-    if (opt == null) {
-      actualOpt.left = parent.left + parent.width + 50;
-      actualOpt.top = parent.top;
-    }
-
-    actualOpt.parent = parentId;
-    this.registerResource(id, type, value, actualOpt, true);
+    this.registerResource(id, type, value, opt, true, parentId);
     return id;
   };
 
@@ -176,7 +166,7 @@ export default class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        selected: {[key]: {$set: true}}
+        selected: { [key]: { $set: true } }
       })
     );
   }
@@ -193,7 +183,7 @@ export default class Workspace extends Component<Props> {
   resetSelected() {
     this.setState(prevState =>
       update(prevState, {
-        $set: {selected: {}}
+        $set: { selected: {} }
       })
     );
   }
@@ -215,7 +205,7 @@ export default class Workspace extends Component<Props> {
   }
 
   removeSelected() {
-    const {selected} = this.state;
+    const { selected } = this.state;
 
     const keys = Object.keys(selected);
 
@@ -247,24 +237,24 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  registerResource(resId, type, res, opt, nested) {
+  registerResource(resId, type, res, opt, nested, parentId) {
     log.info(`Loading resource [${resId}] of type ${type}`);
     const actualOpt = opt == null ? defaultOpt : opt;
 
     this.disassembleResource(resId, type, res, actualOpt);
 
-    const {left, top} = actualOpt;
+    const { left, top } = actualOpt;
     const leftPos = left == null ? 20 : left;
     const topPos = top == null ? 20 : top;
 
-    const {resources} = this.state;
+    const { resources } = this.state;
     let entry = resources[resId];
     if (!entry) {
       entry = {};
     }
 
     if (nested) {
-      entry.parent = opt.parent;
+      entry.parent = parentId;
     }
 
     entry.top = topPos;
@@ -277,13 +267,13 @@ export default class Workspace extends Component<Props> {
 
     this.setState(prevState =>
       update(prevState, {
-        resources: {[resId]: {$set: entry}}
+        resources: { [resId]: { $set: entry } }
       })
     );
   }
 
   disassembleResource(resId, type, res, opt) {
-    const {schemas} = this.state;
+    const { schemas } = this.state;
     const schema = schemas[type];
 
     if (schema == null) {
@@ -298,31 +288,58 @@ export default class Workspace extends Component<Props> {
     const optClone = JsonUtils.clone(opt);
     optClone.left += 400;
 
-    schema.properties.map(prop => {
-      const {name} = prop;
-      if (prop.type !== 'object') {
-        return;
-      }
-
+    schema.properties.forEach(prop => {
+      const { name } = prop;
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const nestedType = value[Consts.FIELD_NAME_TYPE];
-      if (nestedType == null || !schemas[nestedType]) {
-        log.error(`Unable to load resource of type: ${nestedType}`);
+      if (prop.type === 'object') {
+        const nestedType = value[Consts.FIELD_NAME_TYPE];
+        if (nestedType == null || !schemas[nestedType]) {
+          log.error(`Unable to load resource of type: ${nestedType}`);
+          return;
+        }
+
+        res[name] = this.createNested(resId, nestedType, value, optClone);
+        optClone.top += 200;
         return;
       }
 
-      res[name] = this.createNested(resId, nestedType, value, optClone);
-      optClone.top += 200;
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        res[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const element = value[i];
+          if (element == null) {
+            res[name].push(null);
+          } else {
+            const nestedType = element[Consts.FIELD_NAME_TYPE];
+            if (nestedType == null || !schemas[nestedType]) {
+              log.error(`Unable to load resource of type: ${nestedType}`);
+            } else {
+              const nestedId = this.createNested(
+                resId,
+                nestedType,
+                element,
+                optClone
+              );
+              res[name].push(nestedId);
+              optClone.top += 200;
+            }
+          }
+        }
+      }
     });
   }
 
   assembleResource(resId, res) {
     log.info(`Assembling ${resId}`);
-    const {schemas, resources} = this.state;
+    const { schemas, resources } = this.state;
     const type = res[Consts.FIELD_NAME_TYPE];
     const schema = schemas[type];
 
@@ -337,29 +354,50 @@ export default class Workspace extends Component<Props> {
 
     const result = JsonUtils.clone(res);
 
-    schema.properties.map(prop => {
-      const {name} = prop;
-      if (prop.type !== 'object') {
-        result[name] = res[name];
-        return;
-      }
-
+    schema.properties.forEach(prop => {
+      const { name } = prop;
       const value = res[name];
       if (value == null) {
         return;
       }
 
-      const actualValue = resources[value];
-      if (actualValue != null) {
-        result[name] = this.assembleResource(value, actualValue.value);
+      if (prop.type === 'object') {
+        const actualValue = resources[value];
+        if (actualValue != null) {
+          result[name] = this.assembleResource(value, actualValue.value);
+        }
+        return;
       }
+
+      if (
+        prop.type === 'array' &&
+        prop.elements &&
+        prop.elements.type === 'object'
+      ) {
+        result[name] = [];
+        for (let i = 0; i < value.length; i += 1) {
+          const elementId = value[i];
+          if (elementId == null) {
+            result[name].push(null);
+          } else {
+            const element = resources[elementId];
+            const assembled = this.assembleResource(elementId, element.value);
+            result[name].push(assembled);
+          }
+        }
+
+        return;
+      }
+
+      // other types
+      result[name] = res[name];
     });
 
     return result;
   }
 
   saveDirty() {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const result = {};
     Object.keys(resources).forEach(key => {
       const res = resources[key];
@@ -374,7 +412,7 @@ export default class Workspace extends Component<Props> {
   }
 
   updateDirty(ids) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     ids.forEach(id => {
       const res = resources[id];
       if (res) {
@@ -382,7 +420,7 @@ export default class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [id]: {
-                $merge: {dirty: false}
+                $merge: { dirty: false }
               }
             }
           })
@@ -396,7 +434,7 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [id]: {
-            $merge: {left, top}
+            $merge: { left, top }
           }
         }
       })
@@ -404,7 +442,7 @@ export default class Workspace extends Component<Props> {
   }
 
   onDataChange(resId, field, fieldValue, errors, skipDirty) {
-    const {resources} = this.state;
+    const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
       log.error(`Unable to find resource ${resId}`);
@@ -415,8 +453,8 @@ export default class Workspace extends Component<Props> {
       update(prevState, {
         resources: {
           [resId]: {
-            value: {$merge: {[field]: fieldValue}},
-            errors: {$merge: {[field]: errors}}
+            value: { $merge: { [field]: fieldValue } },
+            errors: { $merge: { [field]: errors } }
           }
         }
       })
@@ -442,7 +480,7 @@ export default class Workspace extends Component<Props> {
           update(prevState, {
             resources: {
               [resToUpdate]: {
-                $merge: {dirty: true}
+                $merge: { dirty: true }
               }
             }
           })
@@ -455,16 +493,16 @@ export default class Workspace extends Component<Props> {
   }
 
   toggleDebugGeometry() {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     this.setState(prevState =>
       update(prevState, {
-        debugGeometry: {$set: !debugGeometry}
+        debugGeometry: { $set: !debugGeometry }
       })
     );
   }
 
   renderDebugTopology(resources) {
-    const {debugGeometry} = this.state;
+    const { debugGeometry } = this.state;
     if (!debugGeometry) {
       return null;
     }
@@ -472,10 +510,10 @@ export default class Workspace extends Component<Props> {
     return (
       <svg style={Object.assign({}, styles)}>
         {Object.keys(resources).map(key => {
-          const {left, top, width, height} = resources[key];
+          const { left, top, width, height } = resources[key];
           return (
             <path
-              style={{zIndex: 5}}
+              style={{ zIndex: 5 }}
               key={`debug-${key}`}
               d={`M ${left} ${top} L ${left + width} ${top + height}`}
               stroke="red"
@@ -489,7 +527,7 @@ export default class Workspace extends Component<Props> {
   }
 
   render() {
-    const {resources, schemas, selected, renderContext} = this.state;
+    const { resources, schemas, selected, renderContext } = this.state;
 
     // log.silly('rendering workspace');
     // log.silly(schemas);
@@ -553,13 +591,13 @@ export default class Workspace extends Component<Props> {
               <Draggable
                 key={key}
                 id={key}
-                position={{x: left, y: top}}
+                position={{ x: left, y: top }}
                 onDrag={(evt, data) => {
                   this.moveChild(key, data.x, data.y);
                 }}
                 enableUserSelectHack={false} // https://github.com/mzabriskie/react-draggable/issues/315
               >
-                <div style={{position: 'absolute'}}>
+                <div style={{ position: 'absolute' }}>
                   <ReactResizeDetector
                     handleWidth
                     handleHeight
