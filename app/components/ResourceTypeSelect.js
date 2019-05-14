@@ -60,6 +60,9 @@ export default class ResourceTypeSelect extends Component<Props> {
 
   render() {
     const { createDialogSchemas, createDialogShow } = this.state;
+    if (!createDialogSchemas && !createDialogSchemas) {
+      return null;
+    }
 
     return (
       <div>

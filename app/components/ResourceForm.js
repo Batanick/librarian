@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -9,15 +9,18 @@ import Col from 'react-bootstrap/Col';
 import * as Consts from '../constants/constants';
 import renderInput from './custom-inputs/field-builder';
 
-// const log = require('electron-log');
+const log = require('electron-log');
 
 type Props = {
+  // not used, but needed to force component rerender on move
+  left: PropTypes.number /* eslint-disable-line react/no-unused-prop-types */,
+  top: PropTypes.number /* eslint-disable-line react/no-unused-prop-types */,
+
   name: PropTypes.string,
   resId: PropTypes.string,
   dirty: PropTypes.bool,
   schema: PropTypes.obj,
   data: PropTypes.obj,
-  onChange: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
   renderContext: PropTypes.obj,
@@ -25,7 +28,7 @@ type Props = {
   orphan: PropTypes.bool
 };
 
-export default class ResourceForm extends Component<Props> {
+export default class ResourceForm extends PureComponent<Props> {
   props: Props;
 
   constructor(...args) {
@@ -58,6 +61,11 @@ export default class ResourceForm extends Component<Props> {
     );
   };
 
+  onChange = (field, fieldValue, errors, skipDirty) => {
+    const { renderContext, resId } = this.props;
+    renderContext.onDataChange(resId, field, fieldValue, errors, skipDirty);
+  };
+
   render() {
     const {
       schema,
@@ -66,12 +74,11 @@ export default class ResourceForm extends Component<Props> {
       errors,
       nested,
       orphan,
-      onChange,
       renderContext,
       resId
     } = this.props;
     const { properties } = schema;
-    // log.silly(`Rendering: ${resId}`);
+    log.silly(`Rendering: ${resId}`);
 
     let border = 'info';
     if (selected) {
@@ -85,7 +92,7 @@ export default class ResourceForm extends Component<Props> {
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px', userSelect: "none" }}
+        style={{ borderWidth: '2px', userSelect: 'none' }}
         border={border}
         role="presentation"
       >
@@ -109,7 +116,7 @@ export default class ResourceForm extends Component<Props> {
                       fieldInfo,
                       fieldData,
                       fieldErrors,
-                      onChange,
+                      this.onChange,
                       resId,
                       renderContext
                     )}

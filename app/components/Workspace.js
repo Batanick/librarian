@@ -10,6 +10,7 @@ import ResourceForm from './ResourceForm';
 import * as JsonUtils from '../js/js-utils';
 import * as Events from '../constants/events';
 import * as Consts from '../constants/constants';
+import SvgConnector from './custom-inputs/SvgConnector';
 
 const log = require('electron-log');
 
@@ -48,6 +49,7 @@ export default class Workspace extends Component<Props> {
       resources: {},
       schemas: {},
       selected: {},
+      links: {},
       renderContext
     };
   }
@@ -145,6 +147,7 @@ export default class Workspace extends Component<Props> {
       resources: {},
       schemas,
       selected: {},
+      links: {},
       renderContext
     });
   }
@@ -155,7 +158,10 @@ export default class Workspace extends Component<Props> {
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
       changeParent: this.changeParent,
-      createNested: this.createNested
+      createNested: this.createNested,
+      onDataChange: this.onDataChange,
+      registerLink: this.registerLink,
+      unregisterLink: this.unregisterLink
     };
   }
 
@@ -271,6 +277,30 @@ export default class Workspace extends Component<Props> {
       })
     );
   }
+
+  registerLink = (id, startPosition, finishId) => {
+    if (startPosition && finishId) {
+      this.setState(prevState =>
+        update(prevState, {
+          links: { [id]: { $set: { start: startPosition, finish: finishId } } }
+        })
+      );
+    }
+  };
+
+  unregisterLink = id => {
+    this.setState(prevState =>
+      update(prevState, {
+        links: {
+          $apply: function removeLink(obj) {
+            const copy = Object.assign({}, obj);
+            delete copy[id];
+            return copy;
+          }
+        }
+      })
+    );
+  };
 
   disassembleResource(resId, type, res, opt) {
     const { schemas } = this.state;
@@ -441,7 +471,7 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  onDataChange(resId, field, fieldValue, errors, skipDirty) {
+  onDataChange = (resId, field, fieldValue, errors, skipDirty) => {
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -463,7 +493,7 @@ export default class Workspace extends Component<Props> {
     if (!skipDirty) {
       this.markParentDirty(resId, resources);
     }
-  }
+  };
 
   markParentDirty(resId, resources) {
     let currentId = resId;
@@ -526,13 +556,50 @@ export default class Workspace extends Component<Props> {
     );
   }
 
+  renderLinks() {
+    const { links, resources } = this.state;
+
+    return (
+      <div>
+        {Object.keys(links).map(key => {
+          const { start, finish } = links[key];
+          const resource = resources[finish];
+          if (!start || !start.x || !start.y) {
+            return null;
+          }
+
+          if (
+            !resource ||
+            !resource.left ||
+            !resource.top ||
+            !resource.height
+          ) {
+            return null;
+          }
+
+          return (
+            <SvgConnector
+              key={key}
+              start={{ x: start.x, y: start.y }}
+              finish={{
+                x: resource.left,
+                y: resource.top + resource.height / 2
+              }}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
   render() {
     const { resources, schemas, selected, renderContext } = this.state;
 
-    // log.silly('rendering workspace');
+    log.silly('Rendering workspace');
     // log.silly(schemas);
     // log.silly(JSON.stringify(resources));
     // log.silly(selected);
+    // log.silly(links);
 
     return (
       <div id="scrollableWorkspace" style={Object.assign({}, scrollableStyles)}>
@@ -565,22 +632,6 @@ export default class Workspace extends Component<Props> {
             const isSelected = selected[key];
             const orphan = nested && parent == null;
 
-            const selfThis = this;
-            const onChange = function changeWrapper(
-              fieldId,
-              fieldValue,
-              fieldErrors,
-              skipDirty
-            ) {
-              selfThis.onDataChange(
-                key,
-                fieldId,
-                fieldValue,
-                fieldErrors,
-                skipDirty
-              );
-            };
-
             const resizeCallback = (width, height) => {
               this.registerSize(key, width, height);
             };
@@ -604,11 +655,12 @@ export default class Workspace extends Component<Props> {
                     onResize={resizeCallback}
                   >
                     <ResourceForm
+                      left={left}
+                      top={top}
                       schema={schema}
                       data={value}
                       name={name}
                       dirty={dirty}
-                      onChange={onChange}
                       resId={key}
                       selected={isSelected}
                       errors={errors}
@@ -623,6 +675,7 @@ export default class Workspace extends Component<Props> {
           })}
           <div id="debug-geometry">{this.renderDebugTopology(resources)}</div>
         </div>
+        {this.renderLinks()}
       </div>
     );
   }

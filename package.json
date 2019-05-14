@@ -1,7 +1,7 @@
 {
   "name": "librarian",
   "productName": "Librarian",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Config management tool",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
@@ -57,7 +57,7 @@
   },
   "main": "./app/main.prod.js",
   "build": {
-    "productName": "ElectronReact",
+    "productName": "Librarian",
     "appId": "org.develar.ElectronReact",
     "files": [
       "app/dist/",
@@ -111,23 +111,13 @@
     "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
   },
   "author": {
-    "name": "Electron React Boilerplte Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://electron-react-boilerplate.js.org"
+    "name": "Evgenii Loikov",
+    "email": "eugene.loikov@gmail.com",
+    "url": "https://github.com/Batanick"
   },
   "contributors": [
-    {
-      "name": "Vikram Rangaraj",
-      "email": "vikr01@icloud.com",
-      "url": "https://github.com/vikr01"
-    },
-    {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
-    }
   ],
-  "license": "MIT",
+  "license": "UNLICENSED",
   "bugs": {
     "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
   },

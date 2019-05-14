@@ -16,10 +16,10 @@ import Octicon, {
   X
 } from '@githubprimer/octicons-react';
 
-import SvgConnector from './SvgConnector';
 import ResourceSelectOverlay from './ResourceSelectOverlay';
 import ModalSelect from '../ModalSelect';
 
+import * as JsonUtils from '../../js/js-utils';
 import * as Consts from '../../constants/constants';
 
 const log = require('electron-log');
@@ -45,7 +45,12 @@ const labelStyles = {
 export default class ResourceRef extends Component<Props> {
   static calculateConnector(target, resourceInfo) {
     const { current } = target;
-    if (current == null) {
+    if (
+      !current ||
+      !resourceInfo ||
+      !resourceInfo.left ||
+      !resourceInfo.width
+    ) {
       log.warn('Unable to calculate connector');
       return null;
     }
@@ -63,6 +68,7 @@ export default class ResourceRef extends Component<Props> {
     super(...args);
 
     this.target = React.createRef();
+    this.linkId = JsonUtils.generateUUID();
 
     this.state = {
       selecting: false,
@@ -72,6 +78,10 @@ export default class ResourceRef extends Component<Props> {
 
   componentDidUpdate() {
     const { value, reference, resourceId, id, renderContext } = this.props;
+    if (value) {
+      renderContext.registerLink(this.linkId, this.getConnector(), value);
+    }
+
     if (!reference) {
       if (value) {
         // if value resource disappeared - updating
@@ -81,6 +91,11 @@ export default class ResourceRef extends Component<Props> {
         }
       }
     }
+  }
+
+  componentWillUnmount(): void {
+    const { renderContext } = this.props;
+    renderContext.unregisterLink(this.linkId);
   }
 
   update = newValue => {
@@ -101,35 +116,14 @@ export default class ResourceRef extends Component<Props> {
     // nesting reference handling only
     if (value != null) {
       renderContext.changeParent(value, null);
+      renderContext.unregisterLink(this.linkId);
     }
 
     if (newValue != null) {
+      renderContext.registerLink(this.linkId, this.getConnector(), newValue);
       renderContext.changeParent(newValue, resourceId);
     }
   };
-
-  renderLink(targetInfo) {
-    const connector = this.getConnector();
-    if (!connector || !connector.x || !connector.y) {
-      return null;
-    }
-
-    if (!targetInfo) {
-      return null;
-    }
-
-    const { left, top, height } = targetInfo;
-    if (!left || !top || !height) {
-      return null;
-    }
-
-    return (
-      <SvgConnector
-        start={{ x: connector.x, y: connector.y }}
-        finish={{ x: left, y: top + height / 2 }}
-      />
-    );
-  }
 
   getConnector() {
     const { renderContext, resourceId, overridingConnector } = this.props;
@@ -359,7 +353,6 @@ export default class ResourceRef extends Component<Props> {
         >
           <Octicon size="small" icon={X} />
         </Button>
-        {this.renderLink(info)}
       </div>
     );
   }

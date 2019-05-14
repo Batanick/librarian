@@ -9,12 +9,20 @@
                 "$type": "NestingPart",
                 "Part": {
                     "$type": "NestingPart",
-                    "TestString": "4"
+                    "Part": {
+                        "$type": "NestingPart",
+                        "Part": {
+                            "$type": "NestingPart",
+                            "TestString": "4"
+                        },
+                        "TestString": "3"
+                    },
+                    "TestString": "2"
                 },
-                "TestString": "3"
+                "TestString": "4"
             },
-            "TestString": "2"
+            "TestString": "3"
         },
-        "TestString": "dsadad"
+        "TestString": "2444"
     }
 }
