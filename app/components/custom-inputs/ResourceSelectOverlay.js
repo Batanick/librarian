@@ -54,8 +54,10 @@ export default class ResourceSelectOverlay extends Component<Props> {
   }
 
   onMouseMove = e => {
-    const x = e.clientX;
-    const y = e.clientY;
+    const scrollable = document.getElementById('scrollableWorkspace');
+
+    const x = e.clientX + scrollable.scrollLeft;
+    const y = e.clientY + scrollable.scrollTop;
 
     const { canConnect } = this.props;
     const dropAllowed = canConnect(x, y) != null;
@@ -94,8 +96,9 @@ export default class ResourceSelectOverlay extends Component<Props> {
   onClickHandler = e => {
     const { onSelect } = this.props;
 
-    const x = e.clientX;
-    const y = e.clientY;
+    const scrollable = document.getElementById('scrollableWorkspace');
+    const x = e.clientX + scrollable.scrollLeft;
+    const y = e.clientY + scrollable.scrollTop;
 
     onSelect(x, y);
     e.stopPropagation();
