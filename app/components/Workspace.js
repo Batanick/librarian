@@ -56,12 +56,29 @@ export default class Workspace extends Component<Props> {
 
   componentDidMount() {
     const selfThis = this;
-    ipcRenderer.on(Events.WORKSPACE_LOAD_RESOURCE, (event, res, options) => {
-      const type = res[Consts.FIELD_NAME_TYPE];
-      const resId = res[Consts.FIELD_NAME_ID];
+    ipcRenderer.on(
+      Events.WORKSPACE_LOAD_RESOURCE,
+      (event, resources, options) => {
+        log.error(resources);
+        let opt = options;
+        if (options == null) {
+          const scrollable = document.getElementById('scrollableWorkspace');
+          opt = {
+            left: scrollable.scrollLeft + 50,
+            top: scrollable.scrollTop + 50
+          };
+        }
 
-      selfThis.registerResource(resId, type, res, options);
-    });
+        for (let i = 0; i < resources.length; i += 1) {
+          const res = resources[i];
+          const type = res[Consts.FIELD_NAME_TYPE];
+          const resId = res[Consts.FIELD_NAME_ID];
+          selfThis.registerResource(resId, type, res, opt);
+
+          opt.top += 400;
+        }
+      }
+    );
     ipcRenderer.on(Events.WORKSPACE_UPDATE_SCHEMAS, (event, schemas) => {
       selfThis.resetWorkspace(schemas);
     });

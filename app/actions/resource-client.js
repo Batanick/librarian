@@ -143,7 +143,7 @@ export default class ResourceClient {
     for (let i = 0; i < size; i += 1) {
       const res = this.resourceSystem.loadResource(path[i], true);
       if (res) {
-        this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, res);
+        this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, [res]);
       }
     }
   }
@@ -156,6 +156,7 @@ export default class ResourceClient {
   }
 
   addExistingResources(resources, options) {
+    const result = [];
     resources.forEach(key => {
       const resource = this.resourceSystem.resources[key];
       if (!resource) {
@@ -163,12 +164,14 @@ export default class ResourceClient {
         return;
       }
 
-      this.mainWindow.webContents.send(
-        Events.WORKSPACE_LOAD_RESOURCE,
-        resource,
-        options
-      );
+      result.push(resource);
     });
+
+    this.mainWindow.webContents.send(
+      Events.WORKSPACE_LOAD_RESOURCE,
+      result,
+      options
+    );
   }
 
   createResourceOfType(type) {
