@@ -155,7 +155,8 @@ export default class Workspace extends Component<Props> {
       findResourceAt: this.findResourceAt,
       loadResourceById: this.loadResourceById,
       changeParent: this.changeParent,
-      createNested: this.createNested
+      createNested: this.createNested,
+      onDataChange: this.onDataChange
     };
   }
 
@@ -441,7 +442,7 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  onDataChange(resId, field, fieldValue, errors, skipDirty) {
+  onDataChange = (resId, field, fieldValue, errors, skipDirty) => {
     const { resources } = this.state;
     const entry = resources[resId];
     if (!entry) {
@@ -463,7 +464,7 @@ export default class Workspace extends Component<Props> {
     if (!skipDirty) {
       this.markParentDirty(resId, resources);
     }
-  }
+  };
 
   markParentDirty(resId, resources) {
     let currentId = resId;
@@ -565,22 +566,6 @@ export default class Workspace extends Component<Props> {
             const isSelected = selected[key];
             const orphan = nested && parent == null;
 
-            const selfThis = this;
-            const onChange = function changeWrapper(
-              fieldId,
-              fieldValue,
-              fieldErrors,
-              skipDirty
-            ) {
-              selfThis.onDataChange(
-                key,
-                fieldId,
-                fieldValue,
-                fieldErrors,
-                skipDirty
-              );
-            };
-
             const resizeCallback = (width, height) => {
               this.registerSize(key, width, height);
             };
@@ -608,7 +593,6 @@ export default class Workspace extends Component<Props> {
                       data={value}
                       name={name}
                       dirty={dirty}
-                      onChange={onChange}
                       resId={key}
                       selected={isSelected}
                       errors={errors}

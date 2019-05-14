@@ -17,7 +17,6 @@ type Props = {
   dirty: PropTypes.bool,
   schema: PropTypes.obj,
   data: PropTypes.obj,
-  onChange: PropTypes.fun,
   selected: PropTypes.bool,
   errors: PropTypes.obj,
   renderContext: PropTypes.obj,
@@ -58,6 +57,12 @@ export default class ResourceForm extends PureComponent<Props> {
     );
   };
 
+  onChange = (field, fieldValue, errors, skipDirty) => {
+    const { renderContext, resId } = this.props;
+
+    renderContext.onDataChange(resId, field, fieldValue, errors, skipDirty);
+  };
+
   render() {
     const {
       schema,
@@ -66,7 +71,6 @@ export default class ResourceForm extends PureComponent<Props> {
       errors,
       nested,
       orphan,
-      onChange,
       renderContext,
       resId
     } = this.props;
@@ -109,7 +113,7 @@ export default class ResourceForm extends PureComponent<Props> {
                       fieldInfo,
                       fieldData,
                       fieldErrors,
-                      onChange,
+                      this.onChange,
                       resId,
                       renderContext
                     )}
