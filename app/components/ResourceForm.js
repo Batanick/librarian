@@ -1,5 +1,5 @@
 // @flow
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 import Card from 'react-bootstrap/Card';
@@ -9,7 +9,7 @@ import Col from 'react-bootstrap/Col';
 import * as Consts from '../constants/constants';
 import renderInput from './custom-inputs/field-builder';
 
-// const log = require('electron-log');
+const log = require('electron-log');
 
 type Props = {
   name: PropTypes.string,
@@ -25,7 +25,7 @@ type Props = {
   orphan: PropTypes.bool
 };
 
-export default class ResourceForm extends Component<Props> {
+export default class ResourceForm extends PureComponent<Props> {
   props: Props;
 
   constructor(...args) {
@@ -71,7 +71,7 @@ export default class ResourceForm extends Component<Props> {
       resId
     } = this.props;
     const { properties } = schema;
-    // log.silly(`Rendering: ${resId}`);
+    log.silly(`Rendering: ${resId}`);
 
     let border = 'info';
     if (selected) {

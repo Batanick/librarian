@@ -529,7 +529,7 @@ export default class Workspace extends Component<Props> {
   render() {
     const { resources, schemas, selected, renderContext } = this.state;
 
-    // log.silly('rendering workspace');
+    log.silly('Rendering workspace');
     // log.silly(schemas);
     // log.silly(JSON.stringify(resources));
     // log.silly(selected);
