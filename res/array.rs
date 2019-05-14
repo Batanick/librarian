@@ -11,24 +11,24 @@
         "2"
     ],
     "PartArray": [
-        null,
         {
             "$type": "ResourcePart",
             "IntField": "1",
             "StringField": "2"
         },
+        null,
         null
     ],
     "PartList": [
         {
             "$type": "ResourcePart",
-            "IntField": "1",
-            "StringField": "1"
+            "IntField": "3",
+            "StringField": "3"
         },
         {
             "$type": "ResourcePart",
-            "IntField": "3",
-            "StringField": "3"
+            "IntField": "1",
+            "StringField": "1"
         }
     ],
     "ResourceList": [

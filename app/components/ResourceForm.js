@@ -12,6 +12,10 @@ import renderInput from './custom-inputs/field-builder';
 const log = require('electron-log');
 
 type Props = {
+  // not used, but needed to force component rerender on move
+  left: PropTypes.number /* eslint-disable-line react/no-unused-prop-types */,
+  top: PropTypes.number /* eslint-disable-line react/no-unused-prop-types */,
+
   name: PropTypes.string,
   resId: PropTypes.string,
   dirty: PropTypes.bool,
@@ -59,7 +63,6 @@ export default class ResourceForm extends PureComponent<Props> {
 
   onChange = (field, fieldValue, errors, skipDirty) => {
     const { renderContext, resId } = this.props;
-
     renderContext.onDataChange(resId, field, fieldValue, errors, skipDirty);
   };
 

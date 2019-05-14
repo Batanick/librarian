@@ -13,20 +13,16 @@
                         "$type": "NestingPart",
                         "Part": {
                             "$type": "NestingPart",
-                            "Part": {
-                                "$type": "NestingPart",
-                                "TestString": "4"
-                            },
-                            "TestString": "3"
+                            "TestString": "4"
                         },
-                        "TestString": "2"
+                        "TestString": "3"
                     },
-                    "TestString": "4"
+                    "TestString": "2"
                 },
-                "TestString": "3"
+                "TestString": "4"
             },
-            "TestString": "2444"
+            "TestString": "3"
         },
-        "TestString": "dsadad2222"
+        "TestString": "2444"
     }
 }
