@@ -59,7 +59,6 @@ export default class Workspace extends Component<Props> {
     ipcRenderer.on(
       Events.WORKSPACE_LOAD_RESOURCE,
       (event, resources, options) => {
-        log.error(resources);
         let opt = options;
         if (options == null) {
           const scrollable = document.getElementById('scrollableWorkspace');
@@ -194,13 +193,16 @@ export default class Workspace extends Component<Props> {
     );
   }
 
-  handleClick = event => {
-    const resId = this.findResourceAt(event.clientX, event.clientY);
+  handleClick = e => {
+    const scrollable = document.getElementById('scrollableWorkspace');
+    const x = e.clientX + scrollable.scrollLeft;
+    const y = e.clientY + scrollable.scrollTop;
+    const resId = this.findResourceAt(x, y);
     if (resId == null) {
       this.resetSelected();
     }
 
-    this.addSelected(resId, event.shiftKey);
+    this.addSelected(resId, e.shiftKey);
   };
 
   resetSelected() {
@@ -612,7 +614,7 @@ export default class Workspace extends Component<Props> {
   render() {
     const { resources, schemas, selected, renderContext } = this.state;
 
-    log.silly('Rendering workspace');
+    // log.silly('Rendering workspace');
     // log.silly(schemas);
     // log.silly(JSON.stringify(resources));
     // log.silly(selected);

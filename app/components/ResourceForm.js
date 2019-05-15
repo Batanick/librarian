@@ -9,7 +9,7 @@ import Col from 'react-bootstrap/Col';
 import * as Consts from '../constants/constants';
 import renderInput from './custom-inputs/field-builder';
 
-const log = require('electron-log');
+// const log = require('electron-log');
 
 type Props = {
   // not used, but needed to force component rerender on move
@@ -78,7 +78,7 @@ export default class ResourceForm extends PureComponent<Props> {
       resId
     } = this.props;
     const { properties } = schema;
-    log.silly(`Rendering: ${resId}`);
+    // log.silly(`Rendering: ${resId}`);
 
     let border = 'info';
     if (selected) {
