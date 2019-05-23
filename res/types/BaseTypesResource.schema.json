@@ -1,5 +1,5 @@
 {
-  "$id": "BaseTypesResource",
+  "id": "BaseTypesResource",
   "$type": "resource",
   "properties": [
     {

@@ -478,12 +478,36 @@ export default class Workspace extends Component<Props> {
     });
   }
 
-  moveChild(id, left, top) {
+  getNestedChildrenSet(resources, id, result) {
+    Object.keys(resources).forEach(key => {
+      const res = resources[key];
+      if (res.nested && res.parent === id) {
+        result.add(key);
+        this.getNestedChildrenSet(resources, key, result);
+      }
+    });
+  }
+
+  moveChild(id, deltaX, deltaY, moveChildren) {
+    const { resources } = this.state;
+    const moveIds = new Set([id]);
+    if (moveChildren) {
+      this.getNestedChildrenSet(resources, id, moveIds);
+    }
+
     this.setState(prevState =>
       update(prevState, {
         resources: {
-          [id]: {
-            $merge: { left, top }
+          $apply: function removeResource(obj) {
+            const copy = Object.assign({}, obj);
+
+            moveIds.forEach(resId => {
+              const res = copy[resId];
+              res.left += deltaX;
+              res.top += deltaY;
+            });
+
+            return copy;
           }
         }
       })
@@ -663,7 +687,7 @@ export default class Workspace extends Component<Props> {
                 id={key}
                 position={{ x: left, y: top }}
                 onDrag={(evt, data) => {
-                  this.moveChild(key, data.x, data.y);
+                  this.moveChild(key, data.deltaX, data.deltaY, evt.shiftKey);
                 }}
                 enableUserSelectHack={false} // https://github.com/mzabriskie/react-draggable/issues/315
               >

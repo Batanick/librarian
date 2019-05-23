@@ -1,5 +1,5 @@
 {
-  "$id": "AnotherDerivedResource",
+  "id": "AnotherDerivedResource",
   "$type": "resource",
   "properties": [
     {

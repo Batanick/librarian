@@ -1,4 +1,4 @@
-export const FIELD_NAME_ID = '$id';
+export const FIELD_NAME_ID = 'id';
 export const FIELD_NAME_TYPE = '$type';
 export const FIELD_NAME_PATH = '$path';
 export const FIELD_NAME_NAME = '$name';
