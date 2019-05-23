@@ -1,5 +1,5 @@
 {
-  "$id": "NestingPartResource",
+  "id": "NestingPartResource",
   "$type": "resource",
   "properties": [
     {

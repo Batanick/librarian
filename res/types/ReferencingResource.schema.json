@@ -1,5 +1,5 @@
 {
-  "$id": "ReferencingResource",
+  "id": "ReferencingResource",
   "$type": "resource",
   "properties": [
     {

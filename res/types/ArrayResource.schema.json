@@ -1,5 +1,5 @@
 {
-  "$id": "ArrayResource",
+  "id": "ArrayResource",
   "$type": "resource",
   "properties": [
     {

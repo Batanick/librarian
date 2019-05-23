@@ -1,5 +1,5 @@
 {
-  "$id": "NestingPart",
+  "id": "NestingPart",
   "$type": "part",
   "properties": [
     {

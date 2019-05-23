@@ -1,5 +1,5 @@
 {
-    "$id": "7d304d1d-da59-4419-9d97-af59fb4cb5e7",
+    "id": "7d304d1d-da59-4419-9d97-af59fb4cb5e7",
     "$type": "BaseTypesResource",
     "BoolField": "true",
     "ByteField": "123",
