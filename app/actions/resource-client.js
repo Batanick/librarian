@@ -197,7 +197,7 @@ export default class ResourceClient {
     }
 
     log.silly(`New resource created: ${JSON.stringify(created)}`);
-    this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, created);
+    this.mainWindow.webContents.send(Events.WORKSPACE_LOAD_RESOURCE, [created]);
   }
 
   static executeModal(mainWindow, text, detail, action) {
