@@ -1,0 +1,16 @@
+{
+  "id": "DerivedResource",
+  "$type": "resource",
+  "properties": [
+    {
+      "name": "DerivedClassProp",
+      "title": "DerivedClassProp",
+      "type": "string"
+    },
+    {
+      "name": "BaseClassProp",
+      "title": "BaseClassProp",
+      "type": "integer"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "id": "ResourcePart2",
+  "$type": "part",
+  "properties": [
+    {
+      "name": "BoolField",
+      "title": "BoolField",
+      "type": "boolean"
+    },
+    {
+      "name": "IntField",
+      "title": "IntField",
+      "type": "integer"
+    },
+    {
+      "name": "StringField",
+      "title": "StringField",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "ResourcePart",
+  "$type": "part",
+  "properties": [
+    {
+      "name": "IntField",
+      "title": "IntField",
+      "type": "integer"
+    },
+    {
+      "name": "StringField",
+      "title": "StringField",
+      "type": "string"
+    }
+  ]
+}
