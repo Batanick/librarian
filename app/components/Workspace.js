@@ -224,7 +224,7 @@ export default class Workspace extends Component<Props> {
       return;
     }
 
-    if (e.key === 'p') {
+    if (e.key === 'p' && e.ctrlKey) {
       this.toggleDebugGeometry();
     }
   }
