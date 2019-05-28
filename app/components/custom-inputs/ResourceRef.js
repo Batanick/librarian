@@ -357,9 +357,29 @@ export default class ResourceRef extends Component<Props> {
     );
   }
 
-  render() {
-    const { value } = this.props;
+  getValueTitle() {
+    const { value, renderContext } = this.props;
+    if (!value) {
+      return '';
+    }
 
+    const res = renderContext.getResourceInfo(value);
+    if (res) {
+      const { resValue, type } = res;
+      const name = resValue[Consts.FIELD_NAME_NAME];
+      if (name) {
+        return name;
+      }
+
+      if (type) {
+        return type;
+      }
+    }
+
+    return value;
+  }
+
+  render() {
     return (
       <div ref={this.target}>
         <Row lg="auto">
@@ -368,7 +388,7 @@ export default class ResourceRef extends Component<Props> {
             className="overflow-hidden"
             style={Object.assign({}, labelStyles)}
           >
-            {value}
+            {this.getValueTitle()}
           </Form.Label>
           <Col lg="auto"> {this.renderField()}</Col>
         </Row>
