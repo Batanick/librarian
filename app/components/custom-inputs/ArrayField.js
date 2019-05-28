@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import Col from 'react-bootstrap/Col';
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Button from 'react-bootstrap/Button';
 
 import Row from 'react-bootstrap/Row';
@@ -98,39 +97,45 @@ export default class ArrayField extends Component<Props> {
       const key = `${version}-${index}`;
 
       return (
-        <Row noGutters key={key}>
-          <Col>{this.renderField(key, index, shown)}</Col>
-          <Col md="auto">
-            <ButtonToolbar>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  this.swap(index, index - 1);
-                }}
-              >
-                <Octicon size="small" icon={ArrowUp} />
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  this.swap(index, index + 1);
-                }}
-              >
-                <Octicon size="small" icon={ArrowDown} />
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                onClick={() => {
-                  deleteWrapper();
-                }}
-              >
-                <Octicon size="small" icon={X} />
-              </Button>
-            </ButtonToolbar>
-          </Col>
+        <Row>
+          <div
+            key={key}
+            style={{
+              flexWrap: 'nowrap',
+              display: 'inline-flex',
+              marginLeft: 'auto',
+              marginRight: '15px'
+            }}
+          >
+            {this.renderField(key, index, shown)}
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                this.swap(index, index - 1);
+              }}
+            >
+              <Octicon size="small" icon={ArrowUp} />
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                this.swap(index, index + 1);
+              }}
+            >
+              <Octicon size="small" icon={ArrowDown} />
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                deleteWrapper();
+              }}
+            >
+              <Octicon size="small" icon={X} />
+            </Button>
+          </div>
         </Row>
       );
     });
@@ -219,7 +224,7 @@ export default class ArrayField extends Component<Props> {
           </Col>
         </Row>
         <Collapse in={open}>
-          <div className="flex-nowrap">
+          <div className="flex-nowrap" style={{ minWidth: '200px' }}>
             {this.renderArray(actualValue, open)}
             <Row>
               <Col />

@@ -92,7 +92,7 @@ export default class ResourceForm extends PureComponent<Props> {
     return (
       <Card
         ref={this.target}
-        style={{ borderWidth: '2px', userSelect: 'none' }}
+        style={{ borderWidth: '2px', userSelect: 'none', whiteSpace: 'nowrap' }}
         border={border}
         role="presentation"
       >
