@@ -366,9 +366,12 @@ export default class ResourceRef extends Component<Props> {
     const res = renderContext.getResourceInfo(value);
     if (res) {
       const { resValue, type } = res;
-      const name = resValue[Consts.FIELD_NAME_NAME];
-      if (name) {
-        return name;
+
+      if (resValue) {
+        const name = resValue[Consts.FIELD_NAME_NAME];
+        if (name) {
+          return name;
+        }
       }
 
       if (type) {
