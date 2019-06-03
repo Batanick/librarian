@@ -1,0 +1,16 @@
+{
+  "id": "EnumResource",
+  "$type": "resource",
+  "properties": [
+    {
+      "name": "Enum",
+      "title": "Enum",
+      "type": "enum",
+      "allowedValues": [
+        "EnumValue1",
+        "EnumValue2",
+        "EnumValue3"
+      ]
+    }
+  ]
+}
