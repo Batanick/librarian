@@ -5,6 +5,7 @@ import BooleanField from './BooleanField';
 import ResourceRef from './ResourceRef';
 import StringField from './StringField';
 import ArrayField from './ArrayField';
+import EnumField from './EnumField';
 
 const log = require('electron-log');
 
@@ -30,6 +31,15 @@ export default function renderInput(
           fieldInfo={fieldInfo}
           renderContext={renderContext}
           resourceId={resId}
+        />
+      );
+    case 'enum':
+      return (
+        <EnumField
+          id={key}
+          value={fieldData}
+          onChangeField={onChange}
+          fieldInfo={fieldInfo}
         />
       );
     case 'string':
